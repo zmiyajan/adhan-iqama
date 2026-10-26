@@ -1,6 +1,6 @@
 <div dir="rtl">
 
-<img src="public/icon-180.png" alt="" width="88" align="left">
+<img src="public/logo-180.png" alt="" width="88" align="left">
 
 # أوقات الأذان والإقامة
 

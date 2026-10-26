@@ -66,7 +66,7 @@ async function serve() {
 const server = await serve();
 mkdirSync(OUT, { recursive: true });
 // The app icon, so a new logo shows up in the video too.
-copyFileSync(join(PUBLIC, "icon-512.png"), join(OUT, "icon.png"));
+copyFileSync(join(PUBLIC, "logo-512.png"), join(OUT, "icon.png"));
 const browser = await chromium.launch();
 try {
   for (const s of SHOTS) {

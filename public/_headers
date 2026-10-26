@@ -18,4 +18,10 @@
   Cache-Control: public, max-age=604800
 
 /*.png
-  Cache-Control: public, max-age=604800
+  Cache-Control: public, max-age=86400
+
+/logo.svg
+  Cache-Control: public, max-age=86400
+
+/manifest.webmanifest
+  Cache-Control: no-cache

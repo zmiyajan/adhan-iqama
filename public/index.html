@@ -8,9 +8,9 @@
 <meta name="color-scheme" content="light dark">
 <meta name="theme-color" content="#f8f4ea" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#0a0a0b" media="(prefers-color-scheme: dark)">
-<link rel="icon" type="image/png" href="icon-180.png">
+<link rel="icon" type="image/png" href="logo-180.png">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="apple-touch-icon" sizes="180x180" href="logo-180.png">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="الأذان">
@@ -587,7 +587,7 @@ select {
 <dialog class="welcome" id="welcome" aria-labelledby="wTitle">
   <div class="in" tabindex="-1" autofocus>
     <div class="wa">
-    <img class="logo" src="icon-180.png" alt="">
+    <img class="logo" src="logo-180.png" alt="">
     <h2 id="wTitle">أهلاً بك</h2>
     <div class="lead">أوقات الأذان والإقامة، وإذاعة القرآن الكريم</div>
     </div>
@@ -1021,7 +1021,7 @@ function chime() {
 function notify(title, body, tag) {
   if (window.AdhanPush && window.AdhanPush.active) return;
   if (!("Notification" in window) || Notification.permission !== "granted") return;
-  const opts = { body, icon: "icon-180.png", badge: "icon-180.png", tag: tag || "iqama", lang: "ar", dir: "rtl" };
+  const opts = { body, icon: "logo-180.png", badge: "logo-180.png", tag: tag || "iqama", lang: "ar", dir: "rtl" };
   if (navigator.serviceWorker && navigator.serviceWorker.controller) {
     navigator.serviceWorker.ready.then(r => r.showNotification(title, opts)).catch(() => {});
   } else {

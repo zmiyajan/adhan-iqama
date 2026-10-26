@@ -1,7 +1,7 @@
 // Offline cache: the times work without internet. The radio is never cached.
 // Bump CACHE after every change so phones drop the old copy.
-const CACHE = "adhan-web-v18";
-const SHELL = ["./", "index.html", "adhan.min.js", "push.js", "manifest.webmanifest", "icon-180.png", "icon-192.png", "icon-512.png", "icon.svg"];
+const CACHE = "adhan-web-v19";
+const SHELL = ["./", "index.html", "adhan.min.js", "push.js", "manifest.webmanifest", "logo-180.png", "logo-192.png", "logo-512.png", "logo.svg"];
 
 self.addEventListener("install", e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL)).then(() => self.skipWaiting()));
@@ -57,8 +57,8 @@ self.addEventListener("push", e => {
   // Always show something: iPhone and Chrome stop delivering to sites whose pushes show nothing.
   e.waitUntil(self.registration.showNotification(d.title || "أوقات الأذان والإقامة", {
     body: d.body || "",
-    icon: "icon-180.png",
-    badge: "icon-180.png",
+    icon: "logo-180.png",
+    badge: "logo-180.png",
     tag: d.tag || "adhan",
     lang: "ar",
     dir: "rtl",
