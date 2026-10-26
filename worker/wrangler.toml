@@ -1,0 +1,14 @@
+# Cron Worker that sends the Web Push notices. Secrets (not in this file):
+#   npx wrangler secret put VAPID_PUBLIC / VAPID_PRIVATE / VAPID_SUBJECT
+# For local runs they come from worker/.dev.vars (never committed).
+name = "adhan-push"
+main = "src/index.js"
+compatibility_date = "2026-10-01"
+
+[triggers]
+crons = ["* * * * *"]
+
+[[d1_databases]]
+binding = "DB"
+database_name = "adhan-push"
+database_id = "0107a5ab-1dd6-4f7d-94f6-c1e0a2fe5fb4"

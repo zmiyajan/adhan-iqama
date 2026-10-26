@@ -1,0 +1,823 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<title>Adhan Explainer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=block" rel="stylesheet">
+<style>
+/* One timeline: window.seek(t) sets every element from t alone. Nothing runs on its own. */
+:root {
+  --bg: #0a0a0b; --ink: #f5efe2; --muted: #a59c8b; --gold: #e2c078; --gold-2: #f0d58f; --gold-3: #b8913f;
+  --card: #141416; --card-2: #1b1a18; --line: rgba(212,175,97,.22);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { width: 100%; height: 100%; overflow: hidden; background: var(--bg); }
+body { font-family: "IBM Plex Sans Arabic", sans-serif; color: var(--ink); -webkit-font-smoothing: antialiased; }
+.num { font-variant-numeric: tabular-nums; font-feature-settings: "tnum"; }
+.ltr { direction: ltr; unicode-bidi: isolate; }
+
+#bg { position: absolute; inset: 0; overflow: hidden; background: var(--bg); }
+#glow, #glow2 { position: absolute; width: 1600px; height: 1600px; left: 0; top: 0; border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(212,175,97,.30), rgba(212,175,97,.08) 55%, rgba(212,175,97,0) 100%); }
+#glow2 { width: 1100px; height: 1100px; background: radial-gradient(closest-side, rgba(240,213,143,.16), rgba(240,213,143,0)); }
+#pattern { position: absolute; left: -400px; top: -400px; width: 2400px; height: 3200px; }
+#dust { position: absolute; inset: 0; }
+#dust i { position: absolute; left: 0; top: 0; border-radius: 50%; background: var(--gold-2); }
+#vignette { position: absolute; inset: 0; background: radial-gradient(ellipse 75% 60% at 50% 48%, rgba(0,0,0,0) 55%, rgba(0,0,0,.55) 100%); }
+
+#content { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; transform-origin: 0 0; }
+.abs { position: absolute; left: 0; top: 0; will-change: transform, opacity; }
+.center-x { left: 0; width: 1080px; text-align: center; }
+
+/* Captions */
+.cap { position: absolute; left: 90px; width: 900px; top: 190px; text-align: center; }
+.cap > * { display: block; will-change: transform, opacity; }
+.cap .k { font-size: 36px; font-weight: 600; color: var(--gold); margin-bottom: 14px; }
+.cap .h { font-family: "Amiri", serif; font-weight: 700; font-size: 96px; line-height: 1.25; color: var(--ink); }
+.cap .s { font-size: 40px; font-weight: 400; color: var(--muted); margin-top: 14px; line-height: 1.45; }
+
+.goldtext { background: linear-gradient(100deg, var(--gold-3) 0%, var(--gold) 30%, #fff4d2 48%, var(--gold-2) 56%, var(--gold) 70%, var(--gold-3) 100%);
+  background-size: 300% 100%; -webkit-background-clip: text; background-clip: text; color: transparent; }
+
+/* Phone */
+#phone { position: absolute; left: 244px; top: 0; width: 592px; height: 1244px; border-radius: 94px; padding: 16px;
+  background: linear-gradient(160deg, #3a3833 0%, #19191b 30%, #0f0f10 70%, #2b2925 100%);
+  box-shadow: 0 0 0 2px rgba(212,175,97,.35), 0 0 0 7px #0b0b0c, 0 0 0 8.5px rgba(240,213,143,.25), 0 70px 140px rgba(0,0,0,.55), 0 20px 50px rgba(0,0,0,.4);
+  transform-origin: 50% 0; will-change: transform, opacity; }
+#phone::before, #phone::after { content: ""; position: absolute; width: 6px; border-radius: 3px; background: #2a2926; }
+#phone::before { right: -14px; top: 250px; height: 130px; }
+#phone::after { left: -14px; top: 210px; height: 80px; box-shadow: 0 120px 0 #2a2926; }
+.screen { position: relative; width: 560px; height: 1212px; border-radius: 78px; overflow: hidden; background: #000; }
+.screen > .layer { position: absolute; inset: 0; width: 560px; height: 1212px; }
+.screen img.layer { object-fit: cover; }
+.island { position: absolute; left: 50%; top: 30px; width: 150px; height: 44px; margin-left: -75px; border-radius: 22px; background: #000; z-index: 5; }
+#scrim { background: #000; }
+
+#phoneL { left: 244px; width: 592px; height: 1244px; border-radius: 94px; padding: 16px; transform-origin: 50% 50%;
+  background: linear-gradient(160deg, #3a3833 0%, #19191b 30%, #0f0f10 70%, #2b2925 100%);
+  box-shadow: 0 0 0 2px rgba(212,175,97,.35), 0 0 0 7px #0b0b0c, 0 0 0 8.5px rgba(240,213,143,.25), 0 70px 140px rgba(0,0,0,.35); }
+/* The landscape screen is drawn turned a quarter clockwise, so it stands upright once the phone turns a quarter back. */
+#lpLand { position: absolute; left: 0; top: 0; width: 1212px; height: 560px; transform-origin: 0 0; transform: translateX(560px) rotate(90deg); }
+
+/* Generic cards that echo the app */
+.card { background: linear-gradient(180deg, var(--card-2), var(--card)); border: 2px solid var(--line); border-radius: 48px;
+  box-shadow: 0 40px 90px rgba(0,0,0,.45); }
+
+/* Countdown hero */
+#cd { z-index: 2; width: 900px; height: 380px; left: 90px; text-align: center; padding-top: 44px; transform-origin: 50% 50%;
+  background: radial-gradient(120% 140% at 50% 0%, rgba(212,175,97,.20), rgba(212,175,97,0) 60%), linear-gradient(180deg, #17150f, #0e0e0f); }
+#cd .l { font-size: 44px; font-weight: 500; color: #e8e0cf; }
+#cd .at { font-size: 38px; color: #a59c8b; margin-top: 4px; }
+.odo { display: inline-flex; direction: ltr; font-size: 168px; font-weight: 600; line-height: 1; height: 190px; align-items: center; margin-top: 10px; }
+.odo .c { position: relative; display: inline-block; width: .62em; height: 1.1em; overflow: hidden;
+  -webkit-mask-image: linear-gradient(180deg, transparent 0, #000 18%, #000 82%, transparent 100%); }
+.odo .c.colon { width: .34em; }
+.odo .c span { position: absolute; left: 0; right: 0; top: .05em; text-align: center; }
+.odo .gold { background: linear-gradient(180deg, #fbe7ae 0%, #e2c078 45%, #b8913f 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+
+/* Times table */
+#table { width: 920px; left: 80px; top: 590px; padding: 14px 0 10px; }
+#table .hd, #table .row { display: flex; align-items: center; padding: 0 50px; }
+#table .hd { height: 84px; font-size: 32px; color: var(--muted); border-bottom: 2px solid var(--line); }
+#table .row { height: 166px; border-bottom: 1.5px solid rgba(212,175,97,.12); position: relative; }
+#table .row:last-child { border-bottom: 0; }
+#table .c1 { flex: 1.25; } #table .c2 { flex: 1; text-align: center; } #table .c3 { flex: 1; text-align: left; }
+#table .nm { font-family: "Amiri", serif; font-weight: 700; font-size: 62px; line-height: 1.05; color: var(--ink); }
+#table .after { display: inline-block; font-size: 27px; color: var(--gold); background: rgba(212,175,97,.12); border-radius: 20px; padding: 2px 16px; margin-top: 6px; }
+#table .tm { font-size: 50px; font-weight: 500; color: var(--ink); }
+#table .iq { font-size: 50px; font-weight: 600; color: var(--gold-2); }
+#table .row .bar { position: absolute; right: 0; top: 22px; bottom: 22px; width: 8px; border-radius: 4px; background: var(--gold); }
+#table .row .hl { position: absolute; inset: 0; background: linear-gradient(270deg, rgba(212,175,97,.16), rgba(212,175,97,0)); }
+.flip { position: relative; display: block; }
+.flip > span { display: block; }
+.flip > .b { position: absolute; inset: 0; }
+#dayChip { left: 0; top: 0; }
+.chip { display: inline-flex; align-items: center; gap: 14px; height: 76px; padding: 0 34px; border-radius: 38px; font-size: 34px; font-weight: 600;
+  color: var(--gold-2); background: rgba(212,175,97,.12); border: 2px solid rgba(212,175,97,.35); white-space: nowrap; }
+.chip .dot { width: 14px; height: 14px; border-radius: 50%; background: var(--gold); }
+#fridayNote { font-size: 36px; color: var(--muted); }
+
+/* Notification banners */
+.nb { width: 940px; left: 70px; height: 196px; border-radius: 52px; padding: 30px 34px; display: flex; gap: 26px; align-items: center;
+  background: rgba(34,33,36,.96); border: 1.5px solid rgba(255,255,255,.08); box-shadow: 0 30px 70px rgba(0,0,0,.5); color: #f4f1ea; }
+.nb img { width: 96px; height: 96px; border-radius: 24px; flex: none; }
+.nb .tx { flex: 1; min-width: 0; }
+.nb .top { display: flex; justify-content: space-between; font-size: 28px; color: #9d9a94; margin-bottom: 4px; }
+.nb .t { font-size: 38px; font-weight: 700; line-height: 1.3; }
+.nb .b { font-size: 33px; color: #d8d4cc; line-height: 1.35; }
+.tag { left: 70px; width: 940px; text-align: center; font-size: 34px; font-weight: 600; color: var(--gold); }
+.tag em { font-style: normal; color: var(--muted); font-weight: 400; }
+
+/* Iqama full screen */
+#iq { position: absolute; inset: 0; background: radial-gradient(70% 45% at 50% 52%, #17140c 0%, #0a0a0b 70%); }
+#iqTitle { top: 560px; font-family: "Amiri", serif; font-weight: 700; font-size: 104px; }
+#ring { left: 170px; top: 720px; width: 740px; height: 740px; }
+#ring svg { width: 100%; height: 100%; transform: rotate(-90deg); overflow: visible; }
+#ring .track { fill: none; stroke: rgba(212,175,97,.16); stroke-width: 3.2; }
+#ring .arc { fill: none; stroke: url(#ringGold); stroke-width: 3.2; stroke-linecap: round; }
+#iqSec { left: 0; width: 740px; top: 0; height: 740px; display: flex; align-items: center; justify-content: center; font-size: 300px; font-weight: 600; direction: ltr; }
+#iqNow { top: 1020px; font-family: "Amiri", serif; font-weight: 700; font-size: 132px; line-height: 1.25; }
+#rays { left: 540px; top: 1090px; }
+#rays i { position: absolute; left: -2px; top: 0; width: 4px; height: 120px; border-radius: 2px; background: linear-gradient(180deg, rgba(240,213,143,0), var(--gold-2)); transform-origin: 50% 0; }
+
+/* Radio */
+#radioCard { width: 920px; left: 80px; height: 236px; border-radius: 56px; display: flex; align-items: center; gap: 32px; padding: 0 40px;
+  background: linear-gradient(180deg, #1c1a16, #121213); border: 2px solid rgba(212,175,97,.30); transform-origin: 50% 50%; }
+#rBtn { position: relative; width: 150px; height: 150px; flex: none; }
+#rBtn .disc { position: absolute; inset: 0; border-radius: 50%; background: linear-gradient(160deg, #f6dd9a, #c89f4a); box-shadow: 0 14px 34px rgba(212,175,97,.35); }
+#rBtn svg { position: absolute; left: 45px; top: 45px; width: 60px; height: 60px; }
+#rBtn .wave { position: absolute; left: 75px; top: 75px; width: 150px; height: 150px; margin: -75px 0 0 -75px; border-radius: 50%; border: 3px solid var(--gold); }
+#radioCard .tx { flex: 1; }
+#radioCard .t { font-family: "Amiri", serif; font-weight: 700; font-size: 60px; line-height: 1.2; display: flex; align-items: center; gap: 22px; }
+.live { display: inline-flex; align-items: center; gap: 10px; font-family: "IBM Plex Sans Arabic"; font-size: 28px; font-weight: 600; color: #ff6b5e;
+  background: rgba(255,80,64,.13); border: 1.5px solid rgba(255,90,74,.45); border-radius: 22px; height: 48px; padding: 0 18px; }
+.live i { position: relative; width: 14px; height: 14px; border-radius: 50%; background: #ff4d3d; }
+.live i b { position: absolute; inset: -8px; border-radius: 50%; border: 2px solid #ff4d3d; }
+#radioCard .s { position: relative; height: 46px; font-size: 32px; color: #a59c8b; }
+#radioCard .s span { position: absolute; right: 0; top: 0; white-space: nowrap; }
+#eq { display: flex; gap: 10px; align-items: center; height: 110px; width: 110px; flex: none; }
+#eq i { width: 14px; height: 100%; border-radius: 7px; background: linear-gradient(180deg, var(--gold-2), var(--gold-3)); transform-origin: 50% 50%; }
+
+/* Settings callouts */
+.co { padding: 0 36px; height: 120px; border-radius: 40px; display: flex; align-items: center; gap: 24px; font-size: 38px; font-weight: 600;
+  background: var(--card); border: 2px solid rgba(212,175,97,.35); box-shadow: 0 30px 70px rgba(0,0,0,.35); white-space: nowrap; color: var(--ink); }
+#alertsHL { left: 296px; top: 926px; width: 488px; height: 418px; border-radius: 34px; border: 3px solid var(--gold);
+  box-shadow: 0 0 0 8px rgba(212,175,97,.14), 0 0 60px rgba(212,175,97,.35); transform-origin: 50% 50%; }
+.co .lb { color: var(--muted); font-weight: 500; font-size: 32px; }
+.co .sel { display: inline-flex; align-items: center; gap: 16px; padding: 0 26px; height: 74px; border-radius: 37px; background: rgba(212,175,97,.12); color: var(--ink); }
+.co .stp { display: inline-flex; align-items: center; gap: 18px; }
+.co .stp b { display: inline-flex; width: 66px; height: 66px; border-radius: 50%; align-items: center; justify-content: center; border: 2px solid rgba(212,175,97,.4); color: var(--gold); font-size: 40px; font-weight: 500; }
+.co .stp .v { position: relative; width: 120px; height: 60px; overflow: hidden; text-align: center; }
+.co .stp .v span { position: absolute; left: 0; right: 0; top: 0; line-height: 60px; }
+.seg { position: relative; display: inline-flex; height: 78px; border-radius: 39px; background: rgba(128,128,128,.14); padding: 6px; }
+.seg span { position: relative; z-index: 1; width: 150px; text-align: center; line-height: 66px; font-size: 32px; }
+.seg .knob { position: absolute; top: 6px; left: 6px; width: 150px; height: 66px; border-radius: 33px; background: linear-gradient(160deg, #f3d68f, #c9a04c); }
+.tapdot { width: 90px; height: 90px; margin: -45px 0 0 -45px; border-radius: 50%; background: rgba(240,213,143,.45); border: 3px solid rgba(184,145,63,.95); box-shadow: 0 0 0 6px rgba(255,255,255,.25); }
+
+/* Install */
+#ins { background: #f3ede0; overflow: hidden; }
+#ins .layer { position: absolute; left: 0; top: 0; width: 560px; height: 1212px; }
+#ins img.layer { object-fit: cover; }
+#insBar { position: absolute; left: 0; right: 0; bottom: 0; height: 150px; background: rgba(250,247,240,.97); border-top: 1px solid rgba(0,0,0,.08);
+  display: flex; justify-content: space-around; align-items: flex-start; padding-top: 30px; direction: ltr; }
+#insBar svg { width: 44px; height: 44px; stroke: #2f7cf6; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+#insUrl { position: absolute; left: 24px; right: 24px; bottom: 160px; height: 76px; border-radius: 24px; background: rgba(255,255,255,.96); box-shadow: 0 6px 20px rgba(0,0,0,.08);
+  font-size: 28px; color: #222; display: flex; align-items: center; justify-content: center; direction: ltr; }
+#sheet { position: absolute; left: 0; right: 0; bottom: 0; height: 760px; background: #f7f5f1; border-radius: 40px 40px 0 0; box-shadow: 0 -10px 40px rgba(0,0,0,.18); padding: 30px 28px; }
+#sheet .grab { width: 70px; height: 8px; border-radius: 4px; background: #cfcac0; margin: 0 auto 26px; }
+#sheet .app { display: flex; align-items: center; gap: 18px; padding-bottom: 22px; border-bottom: 1px solid #e3ded4; margin-bottom: 22px; }
+#sheet .app img { width: 74px; height: 74px; border-radius: 18px; }
+#sheet .app b { font-size: 28px; color: #1d1b17; display: block; }
+#sheet .app small { font-size: 22px; color: #8a8478; direction: ltr; display: block; text-align: right; }
+#sheet .grp { background: #fff; border-radius: 22px; overflow: hidden; margin-bottom: 18px; }
+#sheet .it { position: relative; display: flex; align-items: center; justify-content: space-between; height: 86px; padding: 0 26px; font-size: 29px; color: #1d1b17; border-bottom: 1px solid #eee9df; }
+#sheet .it:last-child { border-bottom: 0; }
+#sheet .it svg { width: 38px; height: 38px; stroke: #1d1b17; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+#sheet .it .hl { position: absolute; inset: 0; background: rgba(212,175,97,.28); }
+#sheet .it > * { position: relative; }
+#hs { background: linear-gradient(170deg, #2a2418 0%, #120f0b 45%, #1d170e 100%); }
+#hs .grid { position: absolute; left: 44px; top: 150px; display: grid; grid-template-columns: repeat(4, 96px); column-gap: 32px; row-gap: 58px; }
+#hs .grid i { width: 96px; height: 96px; border-radius: 26px; background: rgba(255,255,255,.10); }
+#hsIcon { position: absolute; left: 0; top: 0; width: 96px; text-align: center; }
+#hsIcon img { width: 96px; height: 96px; border-radius: 26px; display: block; box-shadow: 0 10px 30px rgba(212,175,97,.35); }
+#hsIcon span { display: block; font-size: 20px; color: #f2ece0; margin-top: 8px; }
+#step { left: 0; top: 0; }
+.stepPill { display: inline-flex; align-items: center; gap: 22px; height: 92px; padding: 0 40px 0 46px; border-radius: 46px; font-size: 38px; font-weight: 600;
+  background: var(--card); border: 2px solid rgba(212,175,97,.4); color: var(--ink); white-space: nowrap; box-shadow: 0 20px 50px rgba(0,0,0,.15); }
+.stepPill .n { width: 60px; height: 60px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; background: linear-gradient(160deg, #f3d68f, #c9a04c); color: #1a1406; font-size: 34px; font-weight: 700; }
+.stepPill svg { width: 40px; height: 40px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; vertical-align: -6px; }
+
+/* Intro and end */
+#logo { left: 410px; width: 260px; height: 260px; border-radius: 60px; box-shadow: 0 30px 80px rgba(212,175,97,.25), 0 0 0 2px rgba(212,175,97,.4); }
+#star { left: 240px; width: 600px; height: 600px; }
+#star path { fill: none; stroke: var(--gold); stroke-width: 1.6; }
+.title { font-family: "Amiri", serif; font-weight: 700; font-size: 118px; line-height: 1.3; }
+.sub { font-size: 50px; color: var(--ink); opacity: .85; font-weight: 400; }
+.rule { width: 160px; height: 2px; background: linear-gradient(90deg, rgba(212,175,97,0), var(--gold)); }
+.rule.r { background: linear-gradient(270deg, rgba(212,175,97,0), var(--gold)); }
+#link { left: 0; width: 1080px; text-align: center; }
+#link .pill { position: relative; display: inline-flex; align-items: center; gap: 20px; height: 128px; padding: 0 56px; border-radius: 64px; overflow: hidden;
+  background: linear-gradient(180deg, #1d1a12, #111012); border: 2.5px solid rgba(240,213,143,.6); font-size: 60px; font-weight: 600; color: var(--gold-2); direction: ltr; }
+#link .pill svg { width: 50px; height: 50px; stroke: var(--gold); fill: none; stroke-width: 2; stroke-linecap: round; }
+#link .sweep { position: absolute; top: -20px; bottom: -20px; width: 140px; background: linear-gradient(90deg, rgba(255,240,200,0), rgba(255,240,200,.35), rgba(255,240,200,0)); transform: skewX(-20deg); }
+.free { display: inline-flex; gap: 40px; font-size: 42px; color: var(--ink); }
+.free span { display: inline-flex; align-items: center; gap: 14px; }
+.free svg { width: 40px; height: 40px; stroke: var(--gold); fill: none; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+</style>
+</head>
+<body>
+<div id="bg">
+  <div id="glow"></div><div id="glow2"></div>
+  <svg id="pattern" viewBox="0 0 2400 3200" aria-hidden="true">
+    <defs>
+      <pattern id="geo" width="200" height="200" patternUnits="userSpaceOnUse">
+        <path d="M100 20 L123 77 L180 100 L123 123 L100 180 L77 123 L20 100 L77 77 Z M43 43 L157 157 M157 43 L43 157 M100 0 V20 M100 180 V200 M0 100 H20 M180 100 H200"
+          fill="none" stroke="#d4af61" stroke-width="1.2"/>
+        <rect x="58" y="58" width="84" height="84" fill="none" stroke="#d4af61" stroke-width="1.2" transform="rotate(45 100 100)"/>
+      </pattern>
+    </defs>
+    <rect width="2400" height="3200" fill="url(#geo)"/>
+  </svg>
+  <div id="dust"></div>
+  <div id="vignette"></div>
+</div>
+
+<div id="content">
+  <!-- 1. Intro -->
+  <div id="s1">
+    <svg id="star" class="abs" viewBox="0 0 600 600" aria-hidden="true">
+      <path id="starA" d="M300 40 L368 232 L560 300 L368 368 L300 560 L232 368 L40 300 L232 232 Z" pathLength="100"/>
+      <path id="starB" d="M300 40 L368 232 L560 300 L368 368 L300 560 L232 368 L40 300 L232 232 Z" pathLength="100" transform="rotate(45 300 300)"/>
+      <circle id="starC" cx="300" cy="300" r="250" pathLength="100" fill="none" stroke="#d4af61" stroke-width="1.2"/>
+    </svg>
+    <img id="logo" class="abs" src="shots/icon.png" alt="">
+    <div id="t1" class="abs center-x title"><span class="goldtext" id="t1g">أوقات الأذان والإقامة</span></div>
+    <div id="t1s" class="abs center-x" style="display:flex;justify-content:center;align-items:center;gap:30px">
+      <i class="rule r" id="ruleR"></i><span class="sub">لكل مؤذن ولكل بيت</span><i class="rule" id="ruleL"></i>
+    </div>
+  </div>
+
+  <!-- Captions, one per scene -->
+  <div class="cap" id="c2"><span class="k">العدّاد</span><span class="h">كم باقي على الأذان؟</span><span class="s">عدّ تنازلي للأذان، وبعده للإقامة</span></div>
+  <div class="cap" id="c3"><span class="k">أوقات اليوم</span><span class="h">الأذان والإقامة لكل صلاة</span><span class="s">على تقويم أم القرى</span></div>
+  <div class="cap" id="c4"><span class="k">التنبيهات</span><span class="h">ولا يفوتك وقت</span><span class="s">إشعار على جوالك قبل الوقت</span></div>
+  <div class="cap" id="c6"><span class="k">إذاعة القرآن الكريم</span><span class="h">بث مباشر بضغطة</span><span class="s">اضغط وتسمع على طول</span></div>
+  <div class="cap" id="c7"><span class="k">الإعدادات</span><span class="h">بسيطة وتنحفظ في جوالك</span><span class="s">الإقامة، التنبيهات، والألوان</span></div>
+  <div class="cap" id="cL"><span class="k">لف الجوال</span><span class="h">وبالعرض بعد</span><span class="s">الجدول والعدّاد جنب بعض</span></div>
+  <div class="cap" id="c8"><span class="k">التثبيت</span><span class="h">ثبّته في جوالك</span><span class="s">ويفتح مثل أي تطبيق</span></div>
+
+  <!-- 2. Countdown hero -->
+  <div id="cd" class="abs card">
+    <div class="l">باقي على أذان العصر</div>
+    <div class="odo num" id="odo"></div>
+    <div class="at">الساعة 3:22 م</div>
+  </div>
+
+  <!-- 3. Table -->
+  <div id="dayChip" class="abs"><span class="chip"><i class="dot"></i><span class="flip" id="dayFlip" style="min-width:300px;text-align:center"><span class="a">الأحد 25 أكتوبر</span><span class="b">الجمعة 30 أكتوبر</span></span></span></div>
+  <div id="table" class="abs card">
+    <div class="hd"><span class="c1">الصلاة</span><span class="c2">الأذان</span><span class="c3">الإقامة</span></div>
+    <div class="row"><span class="c1"><div class="nm">الفجر</div><span class="after">بعد 25 دقيقة</span></span><span class="c2 tm">5:04 ص</span><span class="c3 iq">5:29 ص</span></div>
+    <div class="row" id="rowDhuhr"><span class="c1"><div class="nm flip"><span class="a">الظهر</span><span class="b">الجمعة</span></div><span class="after flip" style="display:inline-block"><span class="a">بعد 20 دقيقة</span><span class="b">بدون إقامة</span></span></span><span class="c2 tm">12:05 م</span><span class="c3 iq flip"><span class="a">12:25 م</span><span class="b">—</span></span></div>
+    <div class="row" id="rowAsr"><i class="hl"></i><i class="bar"></i><span class="c1"><div class="nm">العصر</div><span class="after">بعد 20 دقيقة</span></span><span class="c2 tm">3:22 م</span><span class="c3 iq">3:42 م</span></div>
+    <div class="row"><span class="c1"><div class="nm">المغرب</div><span class="after">بعد 10 دقائق</span></span><span class="c2 tm">5:49 م</span><span class="c3 iq">5:59 م</span></div>
+    <div class="row"><span class="c1"><div class="nm">العشاء</div><span class="after">بعد 20 دقيقة</span></span><span class="c2 tm">7:19 م</span><span class="c3 iq">7:39 م</span></div>
+  </div>
+  <div id="fridayNote" class="abs center-x">يوم الجمعة: صلاة الجمعة مكان الظهر، وما فيه إقامة</div>
+
+  <!-- Phone -->
+  <div id="phone">
+    <div class="screen">
+      <img class="layer" id="sc-home" src="shots/home-dark.png" alt="">
+      <img class="layer" id="sc-radio" src="shots/radio-dark.png" alt="">
+      <img class="layer" id="sc-setD" src="shots/settings-dark.png" alt="">
+      <img class="layer" id="sc-setL" src="shots/settings-light.png" alt="">
+      <div class="layer" id="ins">
+        <img class="layer" src="shots/home-light.png" alt="">
+        <div id="insUrl">adhan-iqama.pages.dev</div>
+        <div id="insBar">
+          <svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg>
+          <svg viewBox="0 0 24 24" style="opacity:.35"><path d="M9 5l7 7-7 7"/></svg>
+          <svg viewBox="0 0 24 24" id="shareIc"><path d="M12 3v12M7 8l5-5 5 5"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg>
+          <svg viewBox="0 0 24 24"><path d="M4 5h6a2 2 0 0 1 2 2v13a2 2 0 0 0-2-2H4zM20 5h-6a2 2 0 0 0-2 2v13a2 2 0 0 1 2-2h6z"/></svg>
+          <svg viewBox="0 0 24 24"><rect x="4" y="4" width="12" height="12" rx="2"/><path d="M8 20h10a2 2 0 0 0 2-2V8"/></svg>
+        </div>
+        <div id="sheet">
+          <div class="grab"></div>
+          <div class="app"><img src="shots/icon.png" alt=""><div><b>أوقات الأذان والإقامة</b><small>adhan-iqama.pages.dev</small></div></div>
+          <div class="grp">
+            <div class="it"><span>نسخ</span><svg viewBox="0 0 24 24"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg></div>
+            <div class="it"><span>إضافة إشارة مرجعية</span><svg viewBox="0 0 24 24"><path d="M4 5h6a2 2 0 0 1 2 2v13a2 2 0 0 0-2-2H4zM20 5h-6a2 2 0 0 0-2 2v13a2 2 0 0 1 2-2h6z"/></svg></div>
+            <div class="it" id="addHome"><i class="hl" id="addHl"></i><span>إضافة إلى الشاشة الرئيسية</span><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="4"/><path d="M12 8v8M8 12h8"/></svg></div>
+          </div>
+          <div class="grp">
+            <div class="it"><span>طباعة</span><svg viewBox="0 0 24 24"><path d="M7 9V4h10v5M7 17H5a1 1 0 0 1-1-1v-6a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1h-2"/><rect x="7" y="14" width="10" height="6"/></svg></div>
+          </div>
+        </div>
+        <div class="abs tapdot" id="tap1"></div>
+        <div class="abs tapdot" id="tap2"></div>
+        <div class="layer" id="hs">
+          <div class="grid"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+          <div id="hsIcon"><img src="shots/icon.png" alt=""><span>الأذان</span></div>
+        </div>
+        <div class="abs tapdot" id="tap3"></div>
+        <img class="layer" id="insOpen" src="shots/home-light.png" alt="">
+      </div>
+      <div class="layer" id="scrim"></div>
+    </div>
+    <div class="island"></div>
+  </div>
+
+  <!-- Landscape beat: a second phone that turns on its side -->
+  <div id="phoneL" class="abs">
+    <div class="screen">
+      <img class="layer" id="lpPort" src="shots/home-light.png" alt="">
+      <img id="lpLand" src="shots/landscape-light.png" alt="">
+    </div>
+    <div class="island"></div>
+  </div>
+
+  <!-- 4. Notifications -->
+  <div class="abs nb" id="nb1"><img src="shots/icon.png" alt=""><div class="tx"><div class="top"><span>الأذان</span><span>الآن</span></div><div class="t">أذان العصر بعد 5 دقائق</div><div class="b">الساعة 3:22 م</div></div></div>
+  <div class="abs tag" id="tg1">قبل الأذان بـ 5 دقائق</div>
+  <div class="abs nb" id="nb2"><img src="shots/icon.png" alt=""><div class="tx"><div class="top"><span>الأذان</span><span>الآن</span></div><div class="t">تذكير المؤذن: أذان العصر بعد 30 دقيقة</div><div class="b">الساعة 3:22 م</div></div></div>
+  <div class="abs tag" id="tg2">تذكير المؤذن قبل الأذان بنص ساعة <em>(اختياري)</em></div>
+  <div class="abs nb" id="nb3"><img src="shots/icon.png" alt=""><div class="tx"><div class="top"><span>الأذان</span><span>الآن</span></div><div class="t">إقامة العصر بعد دقيقتين</div><div class="b">الساعة 3:42 م</div></div></div>
+  <div class="abs tag" id="tg3">قبل الإقامة بدقيقتين</div>
+
+  <!-- 6. Radio card -->
+  <div id="radioCard" class="abs">
+    <div id="rBtn"><i class="wave" id="w1"></i><i class="wave" id="w2"></i><i class="wave" id="w3"></i><div class="disc" id="rDisc"></div>
+      <svg viewBox="0 0 24 24" id="icPlay"><path d="M7 4.5v15l12.5-7.5z" fill="#1a1406"/></svg>
+      <svg viewBox="0 0 24 24" id="icStop"><rect x="6" y="6" width="12" height="12" rx="2" fill="#1a1406"/></svg>
+    </div>
+    <div class="tx">
+      <div class="t">إذاعة القرآن الكريم <span class="live"><i><b id="liveRing"></b></i>مباشر</span></div>
+      <div class="s"><span id="rs1">بث مباشر من إذاعة القرآن الكريم</span><span id="rs2">تسمع البث المباشر · اضغط للإيقاف</span></div>
+    </div>
+    <div id="eq"><i></i><i></i><i></i><i></i><i></i></div>
+  </div>
+
+  <!-- 7. Settings callouts -->
+  <div class="abs" id="alertsHL"></div>
+  <div class="abs co" id="coIq"><span class="lb">إقامة العشاء</span><span class="stp"><b>−</b><span class="v num"><span id="iqA">20 د</span><span id="iqB">25 د</span></span><b id="iqPlus">+</b></span></div>
+  <div class="abs co" id="coTheme"><span class="lb">الألوان</span><span class="seg"><i class="knob" id="knob"></i><span id="segL">فاتح</span><span id="segD">داكن</span></span></div>
+  <div class="abs tapdot" id="tapIq"></div>
+  <div class="abs tapdot" id="tapTh"></div>
+
+  <!-- 8. Install step pill -->
+  <div id="step" class="abs center-x">
+    <span class="stepPill" id="st1"><span class="n num">1</span>اضغط زر المشاركة <svg viewBox="0 0 24 24"><path d="M12 3v12M7 8l5-5 5 5"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg></span>
+  </div>
+  <div id="step2" class="abs center-x"><span class="stepPill"><span class="n num">2</span>اختر «إضافة إلى الشاشة الرئيسية»</span></div>
+  <div id="step3" class="abs center-x"><span class="stepPill"><span class="n num">3</span>افتحه من أيقونته</span></div>
+
+  <!-- 5. Iqama full screen (over everything) -->
+  <div id="iq">
+    <div class="abs center-x" id="iqKick" style="top:200px;font-size:36px;font-weight:600;color:var(--gold)">قبل الإقامة بدقيقة</div>
+    <div class="abs center-x" id="iqHead" style="top:258px;font-family:Amiri;font-weight:700;font-size:92px;line-height:1.25">عدّاد بكامل الشاشة</div>
+    <div class="abs center-x goldtext" id="iqTitle">إقامة العصر</div>
+    <div id="ring" class="abs">
+      <svg viewBox="0 0 100 100" aria-hidden="true">
+        <defs><linearGradient id="ringGold" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fbe7ae"/><stop offset=".5" stop-color="#e2c078"/><stop offset="1" stop-color="#b8913f"/></linearGradient></defs>
+        <circle class="track" cx="50" cy="50" r="46"/>
+        <circle class="arc" id="arc" cx="50" cy="50" r="46" pathLength="60" stroke-dasharray="60" stroke-dashoffset="0"/>
+      </svg>
+      <div id="iqSec" class="abs num"><span class="goldtext" id="iqNum" style="background-position:40% 0">60</span></div>
+    </div>
+    <div class="abs" id="rays"></div>
+    <div class="abs center-x goldtext" id="iqNow">حان وقت<br>إقامة العصر</div>
+  </div>
+
+  <!-- 9. End card -->
+  <div id="s9">
+    <img id="logo9" class="abs" src="shots/icon.png" alt="" style="left:430px;width:220px;height:220px;border-radius:52px;box-shadow:0 30px 80px rgba(212,175,97,.25),0 0 0 2px rgba(212,175,97,.4)">
+    <div id="t9" class="abs center-x title"><span class="goldtext" id="t9g">أوقات الأذان والإقامة</span></div>
+    <div id="t9s" class="abs center-x sub">لكل مؤذن ولكل بيت</div>
+    <div id="link" class="abs"><span class="pill"><svg viewBox="0 0 24 24"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg>adhan-iqama.pages.dev<i class="sweep" id="sweep"></i></span></div>
+    <div id="free" class="abs center-x"><span class="free"><span><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>مجاني</span><span><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>بدون إعلانات</span></span></div>
+    <div id="hint9" class="abs center-x" style="font-size:36px;color:var(--muted)">افتح الرابط من جوالك، وثبّته على الشاشة الرئيسية</div>
+  </div>
+</div>
+
+<script>
+"use strict";
+const DURATION = 55.5;
+// The landscape beat is cut in after the settings scene: the rest of the timeline holds at HOLD for BEAT seconds.
+const HOLD = 42.3, BEAT = 3;
+const $ = id => document.getElementById(id);
+const FMT = new URLSearchParams(location.search).get("fmt") || "vertical";
+
+// ---------- easing ----------
+function bezier(x1, y1, x2, y2) {
+  const cx = 3 * x1, bx = 3 * (x2 - x1) - cx, ax = 1 - cx - bx;
+  const cy = 3 * y1, by = 3 * (y2 - y1) - cy, ay = 1 - cy - by;
+  const X = s => ((ax * s + bx) * s + cx) * s, Y = s => ((ay * s + by) * s + cy) * s, dX = s => (3 * ax * s + 2 * bx) * s + cx;
+  return x => {
+    if (x <= 0) return 0; if (x >= 1) return 1;
+    let s = x;
+    for (let i = 0; i < 8; i++) { const e = X(s) - x, d = dX(s); if (Math.abs(e) < 1e-6 || Math.abs(d) < 1e-6) break; s -= e / d; }
+    return Y(Math.min(1, Math.max(0, s)));
+  };
+}
+const ease = {
+  out: bezier(.16, 1, .3, 1),        // the app's own curve
+  inOut: bezier(.65, 0, .35, 1),
+  in: bezier(.55, 0, .75, .1),
+  back: bezier(.34, 1.45, .64, 1),
+  spring: x => x <= 0 ? 0 : x >= 1 ? 1 : 1 - Math.exp(-6.5 * x) * Math.cos(9.5 * x) * (1 - x),
+};
+const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+const lerp = (a, b, k) => a + (b - a) * k;
+const prog = (t, a, d) => clamp((t - a) / d);
+// In at a (for din), out at b (for dout): returns [inProgress, outProgress], both eased.
+const io = (t, a, b, din = .8, dout = .55, ei = ease.out, eo = ease.in) => [ei(prog(t, a, din)), eo(prog(t, b, dout))];
+
+function set(el, { x = 0, y = 0, s = 1, sx, sy, r = 0, o = 1, rx = 0 } = {}) {
+  const S = sx != null || sy != null ? `scale(${sx ?? s},${sy ?? s})` : `scale(${s})`;
+  el.style.transform = `translate3d(${x.toFixed(2)}px,${y.toFixed(2)}px,0) ${S}${r ? ` rotate(${r}deg)` : ""}${rx ? ` perspective(900px) rotateX(${rx}deg)` : ""}`;
+  el.style.opacity = clamp(o).toFixed(3);
+  el.style.visibility = o <= 0.001 ? "hidden" : "visible";
+}
+
+// ---------- colors: dark ↔ light ----------
+const hex = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
+const mix = (a, b, k) => { const A = hex(a), B = hex(b); return `rgb(${A.map((v, i) => Math.round(lerp(v, B[i], k))).join(",")})`; };
+const THEME = {
+  "--bg": ["#0a0a0b", "#f5efe2"], "--ink": ["#f5efe2", "#2a2117"], "--muted": ["#a59c8b", "#7d705b"],
+  "--gold": ["#e2c078", "#a47c2c"], "--gold-2": ["#f0d58f", "#8f6a1f"], "--gold-3": ["#b8913f", "#6f5116"],
+  "--card": ["#141416", "#fffaf0"], "--card-2": ["#1b1a18", "#fffdf7"],
+};
+function theme(L) {
+  const root = document.documentElement.style;
+  for (const [k, [d, l]] of Object.entries(THEME)) root.setProperty(k, mix(d, l, L));
+  root.setProperty("--line", `rgba(${L > .5 ? "164,124,44" : "212,175,97"},${lerp(.22, .3, L)})`);
+  $("vignette").style.opacity = (1 - L * .85).toFixed(3);
+}
+
+// ---------- deterministic randomness ----------
+function rng(seed) { return () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+const R = rng(7);
+const DUST = Array.from({ length: 34 }, () => ({ x: R() * 1080, y: R() * 1920, r: 1.5 + R() * 3.5, v: 8 + R() * 26, a: .15 + R() * .45, p: R() * 6.28 }));
+for (const d of DUST) { const i = document.createElement("i"); i.style.width = i.style.height = `${d.r * 2}px`; $("dust").appendChild(i); d.el = i; }
+for (let i = 0; i < 24; i++) { const r = document.createElement("i"); $("rays").appendChild(r); }
+
+// ---------- countdown odometer ----------
+const ODO_CELLS = [];
+(function buildOdo() {
+  const odo = $("odo");
+  for (const ch of "00:00:00") {
+    const c = document.createElement("span");
+    c.className = "c" + (ch === ":" ? " colon" : "");
+    c.innerHTML = ch === ":" ? '<span class="gold">:</span>' : '<span class="gold a"></span><span class="gold b"></span>';
+    odo.appendChild(c); ODO_CELLS.push(c);
+  }
+})();
+const hms = s => [Math.floor(s / 3600), Math.floor(s / 60) % 60, s % 60].map(v => String(v).padStart(2, "0")).join(":");
+// Fast-forward from 00:24:12 to 00:23:45, slowing down, landing exactly on what the app shows.
+const CD_FROM = 24 * 60 + 12, CD_TO = 23 * 60 + 45, CD_T0 = 5.25, CD_T1 = 7.55;
+const CD_STEPS = [{ t: -1, v: CD_FROM }];
+for (let k = 1; k <= CD_FROM - CD_TO; k++) {
+  const p = 1 - Math.pow(1 - k / (CD_FROM - CD_TO), 1 / 2.2);   // value follows 1-(1-p)^2.2
+  CD_STEPS.push({ t: CD_T0 + p * (CD_T1 - CD_T0), v: CD_FROM - k });
+}
+// Iqama: 60 → 0, quick at first, the last seconds slow.
+const IQ_T0 = 24.75, IQ_T1 = 28.85;
+const iqValue = t => 60 * (1 - (1 - Math.pow(1 - prog(t, IQ_T0, IQ_T1 - IQ_T0), 2.2)));
+const IQ_STEPS = [{ t: -1, v: 60 }];
+for (let k = 1; k <= 60; k++) IQ_STEPS.push({ t: IQ_T0 + (1 - Math.pow(1 - k / 60, 1 / 2.2)) * (IQ_T1 - IQ_T0), v: 60 - k });
+
+function stepAt(steps, t) {
+  let i = 0;
+  while (i + 1 < steps.length && steps[i + 1].t <= t) i++;
+  const cur = steps[i], prev = steps[i - 1] || cur;
+  const gap = i > 1 ? cur.t - steps[i - 1].t : .4;
+  return { v: cur.v, pv: prev.v, since: t - cur.t, dur: Math.min(.4, Math.max(.06, gap * .92)), i };
+}
+
+function drawOdo(t) {
+  const st = stepAt(CD_STEPS, t), cur = hms(st.v), prev = hms(st.pv);
+  const e = ease.out(clamp(st.since / st.dur));
+  [...cur].forEach((ch, i) => {
+    if (ch === ":") return;
+    const a = ODO_CELLS[i].children[0], b = ODO_CELLS[i].children[1];
+    a.textContent = ch; b.textContent = prev[i];
+    if (ch !== prev[i] && e < 1) {
+      a.style.transform = `translateY(${(e - 1) * 100}%)`; a.style.opacity = e;
+      b.style.transform = `translateY(${e * 100}%)`; b.style.opacity = 1 - e;
+    } else { a.style.transform = "none"; a.style.opacity = 1; b.style.opacity = 0; }
+  });
+}
+
+// Caption in/out: lines rise in one after another, leave upward together.
+function caption(id, t, a, b, dy = 0) {
+  const lines = $(id).children;
+  [...lines].forEach((el, i) => {
+    const [pi, po] = io(t, a + i * .09, b, .85, .45);
+    set(el, { y: dy + (1 - pi) * 46 - po * 40, o: pi * (1 - po) });
+  });
+}
+
+// A flip between two words (.a → .b) with progress k.
+function flip(el, k) {
+  const a = el.querySelector(".a"), b = el.querySelector(".b");
+  set(a, { y: -k * 40, o: 1 - k, rx: k * 70 });
+  set(b, { y: (1 - k) * 40, o: k, rx: (k - 1) * 70 });
+}
+
+function tapDot(el, t, at, x, y) {
+  const k = prog(t, at, .55);
+  const vis = t >= at - .25 && t < at + .55;
+  const pre = ease.out(prog(t, at - .25, .25));
+  set(el, { x, y, s: vis ? (k > 0 ? 1 + k * .9 : .6 + .4 * pre) : 1, o: vis ? (k > 0 ? (1 - k) * .9 : pre * .9) : 0 });
+}
+
+// ---------- phone ----------
+const PHONE_W = 592;
+function phone(state) { set($("phone"), state); }
+function layer(id, o) { const el = $(id); el.style.opacity = clamp(o).toFixed(3); el.style.visibility = o <= .001 ? "hidden" : "visible"; }
+
+// ---------- the timeline ----------
+function render(rt) {
+  const t = rt < HOLD ? rt : rt < HOLD + BEAT ? HOLD : rt - BEAT;
+  // Light mode lives from the settings theme switch through the install scene.
+  const L = ease.inOut(prog(t, 39.55, .7)) * (1 - ease.inOut(prog(t, 47.15, .8)));
+  theme(L);
+
+  // Background: glow travels between scenes, pattern drifts for parallax, dust floats up.
+  const G = [[0, 540, 800, .6], [1.2, 540, 800, 1], [4.6, 540, 760, 1], [10.4, 300, 1100, 1.1], [17, 760, 900, 1], [24, 540, 1090, 1.25], [31, 540, 1500, 1], [36.6, 300, 1000, 1.05], [42.2, 760, 1100, 1], [47.6, 540, 900, 1.1], [56, 540, 900, 1.1]];
+  let gi = 0; while (gi + 2 < G.length && G[gi + 1][0] <= t) gi++;
+  const g0 = G[gi], g1 = G[gi + 1], gk = ease.inOut(prog(t, g0[0], g1[0] - g0[0]));
+  const gx = lerp(g0[1], g1[1], gk), gy = lerp(g0[2], g1[2], gk), gs = lerp(g0[3], g1[3], gk);
+  const intro = ease.out(prog(t, 0, 1.6));
+  set($("glow"), { x: gx - 800, y: gy - 800, s: gs * (.92 + .08 * Math.sin(rt * .9)), o: intro * lerp(1, .75, L) });
+  set($("glow2"), { x: 1080 - gx - 550 + Math.sin(rt * .4) * 80, y: 1920 - gy - 550 + Math.cos(rt * .35) * 60, o: intro * .8 });
+  // The lattice stays a faint texture, fainter still behind the title and end cards.
+  const quiet = 1 - ease.inOut(prog(t, 4.1, .7)) + ease.inOut(prog(t, 47.3, .7));
+  set($("pattern"), { x: Math.sin(rt * .12) * 40, y: -rt * 9, r: 0, o: intro * lerp(.07, .1, L) * (1 - .65 * clamp(quiet)) });
+  for (const d of DUST) {
+    const y = ((d.y - rt * d.v) % 1920 + 1920) % 1920, x = d.x + Math.sin(rt * .5 + d.p) * 18;
+    set(d.el, { x, y, o: intro * d.a * (.6 + .4 * Math.sin(rt * 1.3 + d.p)) * (1 - L * .6) });
+  }
+
+  // Scene groups outside their window are taken out of the page.
+  $("s1").style.display = t < 4.7 ? "" : "none";
+  $("s9").style.display = t > 47.5 ? "" : "none";
+
+  // 1. Intro (0 – 4.6)
+  {
+    const out = ease.in(prog(t, 4.0, .6));
+    const oy = -out * 70, os = 1 + out * .06, oo = 1 - out;
+    const draw = ease.inOut(prog(t, .15, 1.7));
+    ["starA", "starB", "starC"].forEach((id, i) => { const p = $(id); p.style.strokeDasharray = "100"; p.style.strokeDashoffset = String(100 - 100 * ease.inOut(prog(t, .15 + i * .18, 1.6))); });
+    set($("star"), { y: 470 + oy, s: (.86 + .14 * draw) * os, r: t * 6, o: (.3 * draw) * oo });
+    const lk = ease.spring(prog(t, .55, 1.1));
+    set($("logo"), { y: 640 + oy + (1 - lk) * 40, s: (.55 + .45 * lk) * os, o: ease.out(prog(t, .55, .5)) * oo });
+    const tk = ease.out(prog(t, 1.15, 1.0));
+    $("t1").style.clipPath = `inset(-20% 0 -20% ${((1 - tk) * 100).toFixed(1)}%)`;
+    set($("t1"), { y: 975 + oy + (1 - tk) * 24, s: os, o: oo });
+    $("t1g").style.backgroundPosition = `${lerp(110, -40, ease.inOut(prog(t, 1.9, 1.5)))}% 0`;
+    const sk = ease.out(prog(t, 1.75, .9));
+    set($("t1s"), { y: 1150 + oy + (1 - sk) * 30, s: os, o: sk * oo });
+    set($("ruleR"), { sx: sk, o: 1 }); set($("ruleL"), { sx: sk, o: 1 });
+    $("ruleR").style.transformOrigin = "100% 50%"; $("ruleL").style.transformOrigin = "0 50%";
+  }
+
+  // 2. Countdown (4.6 – 10.4)
+  caption("c2", t, 4.75, 9.95);
+  {
+    const [pi] = io(t, 4.95, 99, .9);
+    const morph = ease.inOut(prog(t, 7.65, .8));
+    const leave = ease.in(prog(t, 9.95, .5));
+    // The hero lands on the phone's own countdown card (514 px wide, centred at y 885).
+    const s = lerp(.92 + .08 * pi, 514 / 900, morph);
+    const y = lerp(700 + (1 - pi) * 60, 885 - 190, morph);
+    set($("cd"), { y: y + leave * 900, s, o: pi * (1 - ease.out(prog(t, 8.12, .3))) });
+    drawOdo(t);
+  }
+  // Phone across scenes 2, 4, 6, 7, 8.
+  {
+    let top = 2200, sc = 1, o = 0, rot = 0;
+    // scene 2 rise, and away for the table
+    const r2 = ease.out(prog(t, 6.9, 1.25)), d2 = ease.in(prog(t, 10.0, .7));
+    if (t < 11) { top = lerp(1950, 640, r2) + d2 * 1300; sc = 1 + .025 * ease.inOut(prog(t, 8.2, 2)); rot = (1 - r2) * 4; o = r2 > 0 ? 1 : 0; }
+    // scene 4 behind the banners
+    else if (t < 24.4) { const r = ease.out(prog(t, 16.9, 1.1)), d = ease.in(prog(t, 23.4, .7)); top = lerp(1950, 700, r) + d * 1300; sc = .96; rot = (1 - r) * -4; o = 1; }
+    // scene 6 radio
+    else if (t < 36.9) { const r = ease.out(prog(t, 30.75, 1.1)), d = ease.in(prog(t, 36.2, .6)); top = lerp(1950, 600, r) + d * 1350; sc = .86; rot = (1 - r) * 4; o = 1; }
+    // scene 7 settings
+    else if (t < 42.4) { const r = ease.out(prog(t, 36.75, 1.1)), d = ease.in(prog(t, 41.7, .6)); top = lerp(1950, 610, r) + d * 1350; sc = .9; rot = (1 - r) * -4; o = 1; }
+    // scene 8 install
+    else { const r = ease.out(prog(t, 42.35, 1.1)), d = ease.in(prog(t, 47.15, .6)); top = lerp(1950, 640, r) + d * 1350; sc = .92; rot = (1 - r) * 4; o = 1; }
+    phone({ y: top, s: sc, r: rot, o: o * (top < 1920 ? 1 : 0) });
+    layer("sc-home", 1);
+    layer("sc-radio", t > 30 && t < 37 ? ease.out(prog(t, 33.05, .35)) : 0);
+    layer("sc-setD", t > 36.5 && t < 42.5 ? 1 : 0);
+    layer("sc-setL", t > 36.5 && t < 42.5 ? ease.inOut(prog(t, 39.6, .6)) : 0);
+    layer("ins", t > 42.2 ? 1 : 0);
+    layer("scrim", t > 16 && t < 24.5 ? .86 * ease.out(prog(t, 17.4, .6)) : 0);
+  }
+
+  // 3. Table (10.4 – 17.0)
+  caption("c3", t, 10.55, 16.4);
+  {
+    const [pi, po] = io(t, 10.75, 16.45, .9, .5);
+    set($("table"), { y: (1 - pi) * 90 - po * 60 + 30, s: .96 + .04 * pi, o: pi * (1 - po) });
+    [...$("table").querySelectorAll(".row")].forEach((row, i) => {
+      const k = ease.out(prog(t, 11.05 + i * .13, .75));
+      set(row, { x: (1 - k) * 90, o: k });
+      const chip = row.querySelector(".after");
+      set(chip, { s: .7 + .3 * ease.back(prog(t, 11.45 + i * .13, .5)), o: ease.out(prog(t, 11.45 + i * .13, .4)) });
+    });
+    const now = ease.out(prog(t, 12.3, .6));
+    set($("rowAsr").querySelector(".hl"), { o: now });
+    set($("rowAsr").querySelector(".bar"), { sy: now, o: now });
+    // Friday: the Dhuhr row turns into Jumu'ah, with no iqama.
+    const fk = ease.inOut(prog(t, 13.85, .6));
+    $("rowDhuhr").querySelectorAll(".flip").forEach(f => flip(f, fk));
+    flip($("dayFlip"), fk);
+    const ck = ease.out(prog(t, 10.95, .7));
+    set($("dayChip"), { x: 0, y: 490 + (1 - ck) * 20 - po * 60, o: ck * (1 - po) });
+    $("dayChip").style.width = "1080px"; $("dayChip").style.textAlign = "center";
+    const hl = Math.sin(clamp((t - 13.85) / .9) * Math.PI);
+    $("rowDhuhr").style.background = `rgba(212,175,97,${(.18 * hl).toFixed(3)})`;
+    const nk = ease.out(prog(t, 14.25, .7));
+    set($("fridayNote"), { y: 1610 + (1 - nk) * 24 - po * 40, o: nk * (1 - po) });
+  }
+
+  // 4. Notifications (17.0 – 24.0)
+  caption("c4", t, 17.1, 23.35);
+  {
+    const BASE = 600, STEP = 300;
+    [[17.75, 1], [19.35, 2], [20.95, 3]].forEach(([at, n], i) => {
+      const k = ease.spring(prog(t, at, 1.0)), ki = ease.out(prog(t, at, .45));
+      const later = [17.75, 19.35, 20.95].filter(a => a > at && t > a).length;   // newer banners above dim older ones
+      const po = ease.in(prog(t, 23.35 + i * .06, .5));
+      const y = BASE + i * STEP;
+      set($("nb" + n), { y: lerp(y - 260, y, k) - po * 80, s: 1 - later * .015, o: ki * (1 - po) });
+      const tk = ease.out(prog(t, at + .35, .6));
+      set($("tg" + n), { y: y + 214 + (1 - tk) * 16 - po * 80, o: tk * (1 - po) });
+    });
+  }
+
+  // 5. Iqama full screen (24.0 – 31.0): a circle opens on the full-screen countdown.
+  {
+    const open = ease.inOut(prog(t, 23.75, .85)), close = ease.inOut(prog(t, 30.35, .7));
+    const iq = $("iq");
+    const vis = t > 23.75 && t < 31.1;
+    iq.style.visibility = vis ? "visible" : "hidden";
+    iq.style.clipPath = `circle(${(open * 1320).toFixed(1)}px at 540px 1090px)`;
+    iq.style.transform = `scale(${1 - close * .18})`; iq.style.opacity = (1 - close).toFixed(3);
+    iq.style.transformOrigin = "540px 1090px";
+    const [ki] = io(t, 24.1, 99, .8); const kq = ease.out(prog(t, 24.25, .8));
+    set($("iqKick"), { y: (1 - ki) * 30, o: ki }); set($("iqHead"), { y: (1 - kq) * 30, o: kq });
+    const v = iqValue(t), st = stepAt(IQ_STEPS, t);
+    const done = ease.out(prog(t, IQ_T1 + .05, .7));
+    $("arc").setAttribute("stroke-dashoffset", (60 - v).toFixed(3));
+    $("iqNum").textContent = String(st.v);
+    const pop = ease.out(clamp(st.since / Math.max(.18, st.dur * 1.4)));
+    set($("iqSec"), { s: (1.1 - .1 * pop) * (1 - done * .3), o: (st.i === 0 ? 1 : .55 + .45 * pop) * (1 - done) });
+    const rk = ease.out(prog(t, 24.3, .9));
+    set($("ring"), { y: (1 - rk) * 40, s: (.9 + .1 * rk) * (1 + .05 * Math.sin(clamp((t - IQ_T1) / .6) * Math.PI)), o: rk * (1 - done * .75) });
+    set($("iqTitle"), { y: (1 - rk) * 30 - done * 30, o: rk * (1 - done) });
+    $("iqTitle").style.backgroundPosition = `${lerp(110, -40, ease.inOut(prog(t, 25, 2)))}% 0`;
+    set($("iqNow"), { y: (1 - done) * 40, s: .9 + .1 * ease.back(prog(t, IQ_T1 + .05, .8)), o: done });
+    $("iqNow").style.backgroundPosition = `${lerp(110, -40, ease.inOut(prog(t, IQ_T1 + .3, 1.4)))}% 0`;
+    const burst = prog(t, IQ_T1, 1.2);
+    [...$("rays").children].forEach((r, i) => {
+      const a = i * 15, len = ease.out(burst);
+      r.style.transform = `rotate(${a}deg) translateY(${(300 + len * 140).toFixed(1)}px) scaleY(${(1 - burst * .6).toFixed(3)})`;
+      r.style.opacity = (Math.sin(burst * Math.PI) * .9).toFixed(3);
+    });
+  }
+
+  // 6. Radio (31.0 – 36.6)
+  caption("c6", t, 31.1, 36.15);
+  {
+    // Pops out of the phone's radio card (at y ≈ 1500 with the phone at top 600, scale .86) and grows.
+    const k = ease.spring(prog(t, 31.75, 1.1)), ko = ease.out(prog(t, 31.75, .4));
+    const po = ease.in(prog(t, 36.15, .5));
+    set($("radioCard"), { y: lerp(1430, 1380, k) + po * 120, s: lerp(.52, 1, k), o: ko * (1 - po) });
+    const tap = 33.0, on = t >= tap;
+    const press = Math.sin(clamp((t - tap + .12) / .3) * Math.PI);
+    set($("rDisc"), { s: 1 - press * .1 });
+    const sw = ease.out(prog(t, tap, .35));
+    set($("icPlay"), { s: 1 - sw, o: 1 - sw, r: -sw * 90 });
+    set($("icStop"), { s: sw, o: sw, r: (1 - sw) * 90 });
+    set($("rs1"), { y: -sw * 20, o: 1 - sw }); set($("rs2"), { y: (1 - sw) * 20, o: sw });
+    [...$("eq").children].forEach((b, i) => {
+      const live = ease.out(prog(t, tap + .1, .6));
+      const h = .28 + .72 * Math.abs(Math.sin(t * (5.1 + i * 1.7) + i * 1.3) * .6 + Math.sin(t * (2.3 + i * .9) + i) * .4);
+      set(b, { sy: lerp(.18, clamp(h, .15, 1), live), o: lerp(.45, 1, live) });
+    });
+    ["w1", "w2", "w3"].forEach((id, i) => {
+      const ph = on ? ((t - tap) * .7 + i / 3) % 1 : 0;
+      set($(id), { s: 1 + ph * 1.5, o: on ? (1 - ph) * .55 * ease.out(prog(t, tap, .4)) : 0 });
+    });
+    const lp = (t * .9) % 1;
+    set($("liveRing"), { s: .6 + lp * 1.1, o: (1 - lp) * .9 });
+  }
+
+  // 7. Settings (36.6 – 42.2)
+  caption("c7", t, 36.7, 41.75);
+  {
+    const items = [["coIq", 38.25, 520, 740], ["coTheme", 38.9, 60, 1555]];
+    for (const [id, at, x, y] of items) {
+      const k = ease.spring(prog(t, at, 1.0)), ko = ease.out(prog(t, at, .4)), po = ease.in(prog(t, 41.75, .45));
+      const w = $(id).offsetWidth;
+      const left = x < 300 ? x : 1080 - 50 - w;
+      set($(id), { x: left + (1 - k) * (x < 300 ? -60 : 60), y: y - po * 60, s: .85 + .15 * k, o: ko * (1 - po) });
+    }
+    // The «التنبيهات» group of the real settings sheet gets a gold frame.
+    {
+      const k = ease.back(prog(t, 37.7, .7)), ko = ease.out(prog(t, 37.7, .4)), po = ease.in(prog(t, 41.6, .4));
+      const glow = .85 + .15 * Math.sin((t - 37.7) * 3.2);
+      set($("alertsHL"), { y: 0, s: 1.06 - .06 * k, o: ko * (1 - po) * glow });
+    }
+    // Isha minutes 20 → 25 with a tap on +.
+    const ik = ease.out(prog(t, 39.0, .45));
+    set($("iqA"), { y: -ik * 60, o: 1 - ik }); set($("iqB"), { y: (1 - ik) * 60, o: ik });
+    set($("iqPlus"), { s: 1 - Math.sin(clamp((t - 38.9) / .3) * Math.PI) * .15 });
+    const iqEl = $("coIq"), plus = $("iqPlus");
+    // Tap dots sit on the + and on «فاتح»; positions measured from the layout.
+    const pr = plus.getBoundingClientRect(), cr = $("content").getBoundingClientRect(), K = cr.width / 1080;
+    tapDot($("tapIq"), t, 38.95, (pr.left - cr.left + pr.width / 2) / K, (pr.top - cr.top + pr.height / 2) / K);
+    const lb = $("segL").getBoundingClientRect();
+    tapDot($("tapTh"), t, 39.5, (lb.left - cr.left + lb.width / 2) / K, (lb.top - cr.top + lb.height / 2) / K);
+    // Knob slides from «داكن» to «فاتح» (RTL: «فاتح» is on the right).
+    const kk = ease.out(prog(t, 39.5, .5));
+    $("knob").style.transform = `translateX(${(kk * 150).toFixed(1)}px)`;
+    $("segL").style.color = kk > .5 ? "#1a1406" : "var(--ink)"; $("segD").style.color = kk > .5 ? "var(--ink)" : "#1a1406";
+    $("segL").style.fontWeight = kk > .5 ? 700 : 400; $("segD").style.fontWeight = kk > .5 ? 400 : 700;
+  }
+
+  // 8. Install (42.2 – 47.6)
+  caption("c8", t, 42.3, 47.05);
+  {
+    const steps = [["step", 42.85, 44.25], ["step2", 44.25, 45.75], ["step3", 45.75, 47.05]];
+    for (const [id, a, b] of steps) {
+      const k = ease.out(prog(t, a, .55)), o = ease.in(prog(t, b, .3));
+      set($(id), { y: 520 + (1 - k) * 26 - o * 20, s: .94 + .06 * k, o: k * (1 - o) });
+    }
+    // Inside the screen (560 × 1212): share tap, the sheet, the add-to-home row, then the home screen.
+    tapDot($("tap1"), t, 43.65, 280, 1137);
+    const sh = ease.out(prog(t, 44.0, .7)), shOut = ease.inOut(prog(t, 45.7, .5));
+    set($("sheet"), { y: (1 - sh) * 800 + shOut * 0, o: 1 - shOut });
+    set($("addHl"), { o: ease.out(prog(t, 44.9, .3)) * (1 - shOut) });
+    const r = $("addHome");
+    tapDot($("tap2"), t, 45.25, 380, 1212 - 760 + r.offsetTop + 43);
+    const hs = ease.out(prog(t, 45.7, .55));
+    layer("hs", hs);
+    // The app icon drops into the empty slot (row 3, column 2 from the right in RTL → left-to-right col 3).
+    const ik = ease.spring(prog(t, 46.05, .9));
+    set($("hsIcon"), { x: 44 + 2 * 128, y: 150 + 3 * 154, s: .3 + .7 * ik, o: ease.out(prog(t, 46.05, .3)) });
+    tapDot($("tap3"), t, 46.75, 44 + 2 * 128 + 48, 150 + 3 * 154 + 48);
+    const op = ease.inOut(prog(t, 46.9, .5));
+    const ins = $("insOpen");
+    ins.style.transformOrigin = `${44 + 2 * 128 + 48}px ${150 + 3 * 154 + 48}px`;
+    set(ins, { s: .12 + .88 * op, o: op });
+  }
+
+  landscape(rt - HOLD);
+
+  // 9. End card (47.6 – 53)
+  {
+    const lk = ease.spring(prog(t, 47.75, 1.1));
+    set($("logo9"), { y: 470 + (1 - lk) * 50, s: .6 + .4 * lk, o: ease.out(prog(t, 47.75, .45)) });
+    const tk = ease.out(prog(t, 48.15, 1.0));
+    $("t9").style.clipPath = `inset(-20% 0 -20% ${((1 - tk) * 100).toFixed(1)}%)`;
+    set($("t9"), { y: 745 + (1 - tk) * 20, o: tk > 0 ? 1 : 0 });
+    $("t9g").style.backgroundPosition = `${lerp(110, -40, ease.inOut(prog(t, 48.8, 1.6)))}% 0`;
+    const sk = ease.out(prog(t, 48.6, .8));
+    set($("t9s"), { y: 915 + (1 - sk) * 24, o: sk * .9 });
+    const pk = ease.spring(prog(t, 49.1, 1.0));
+    set($("link"), { y: 1130 + (1 - pk) * 40, s: .9 + .1 * pk, o: ease.out(prog(t, 49.1, .4)) });
+    $("sweep").style.transform = `translateX(${lerp(-200, 900, ease.inOut(prog(t, 49.9, 1.3)))}px) skewX(-20deg)`;
+    const fk = ease.out(prog(t, 49.7, .8));
+    set($("free"), { y: 1330 + (1 - fk) * 24, o: fk });
+    const hk = ease.out(prog(t, 50.2, .8));
+    set($("hint9"), { y: 1440 + (1 - hk) * 20, o: hk * .9 });
+  }
+}
+
+// Landscape beat, u = seconds since HOLD (0 – 3): rise, quarter turn with a spring, the screen swaps, leave.
+function landscape(u) {
+  const on = u > -.1 && u < BEAT + .1;
+  $("phoneL").style.display = on ? "" : "none";
+  $("cL").style.display = on ? "" : "none";
+  if (!on) return;
+  caption("cL", u, .05, 2.5);
+  const rise = ease.out(prog(u, 0, .75)), turn = ease.spring(prog(u, .7, 1.25)), leave = ease.in(prog(u, 2.5, .5));
+  const s = lerp(.62, .8, turn);
+  // Centre of the 1244-tall phone sits at y 1150.
+  set($("phoneL"), { y: 1150 - 622 + (1 - rise) * 700 + leave * 120, s, r: -90 * turn + (1 - rise) * 6, o: rise * (1 - leave) });
+  const sw = ease.inOut(prog(u, 1.22, .22));
+  layer("lpPort", 1 - sw); layer("lpLand", sw);
+}
+
+// ---------- layout per format ----------
+function layout() {
+  const W = innerWidth, H = innerHeight;
+  // Vertical: 1:1 with the 1080 × 1920 design. Square: the design scaled around its centre, background full-bleed.
+  const k = FMT === "square" ? .6 : W / 1080;
+  $("content").style.transform = `translate(${(W - 1080 * k) / 2}px, ${(H - 1920 * k) / 2}px) scale(${k})`;
+}
+
+window.DURATION = DURATION;
+window.seek = t => { render(t); };
+window.ready = (async () => {
+  layout();
+  await document.fonts.ready;
+  await Promise.all([...document.images].map(i => i.decode().catch(() => {})));
+  render(0);
+  return document.fonts.check('700 40px "Amiri"') && document.fonts.check('600 40px "IBM Plex Sans Arabic"');
+})();
+// Open the file directly in a browser to scrub: ?t=12.5, or ?play to watch it (preview only, never used to render).
+const q = new URLSearchParams(location.search);
+if (q.has("t")) window.ready.then(() => render(+q.get("t")));
+if (q.has("play")) window.ready.then(() => { const t0 = performance.now(); const f = () => { render(((performance.now() - t0) / 1000) % DURATION); requestAnimationFrame(f); }; f(); });
+</script>
+</body>
+</html>

@@ -1,0 +1,9 @@
+# Cloudflare Pages project: the site in public/ plus functions/ (api/subscribe writes to D1).
+name = "adhan-iqama"
+pages_build_output_dir = "public"
+compatibility_date = "2026-10-01"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "adhan-push"
+database_id = "0107a5ab-1dd6-4f7d-94f6-c1e0a2fe5fb4"

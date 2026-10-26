@@ -1,0 +1,1307 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>أوقات الأذان والإقامة</title>
+<meta name="description" content="أوقات الأذان والإقامة وإذاعة القرآن الكريم">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#f8f4ea" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0a0a0b" media="(prefers-color-scheme: dark)">
+<link rel="icon" type="image/png" href="icon-180.png">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="الأذان">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://stream.radiojar.com">
+<link href="https://fonts.googleapis.com/css2?family=Amiri:wght@700&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
+<!-- adhan 4.4.3 (batoulapps, MIT, see LICENSE-adhan.txt), served from this site so nothing waits on a CDN -->
+<script src="adhan.min.js"></script>
+<style>
+/* Light: ivory, black ink, deep gold */
+:root {
+  --bg: #f8f4ea;
+  --card: #fffdf8;
+  --ink: #16140f;
+  --muted: #776d5b;
+  --line: #e7dcc4;
+  --gold: #8a6420;
+  --gold-hi: #b8913f;
+  --on-gold: #16140f;
+  --now: #f3e9d2;
+  --hero-bg: linear-gradient(165deg, #fffaf0, #f3e7cc);
+  --hero-line: rgba(160, 120, 40, .35);
+  --hero-sub: #7a6a4c;
+  --hero-glow: rgba(255, 255, 255, .7);
+  --count-grad: linear-gradient(180deg, #b48a38, #7a5512);
+  --shadow: 0 1px 2px rgba(40, 30, 10, .06), 0 8px 24px rgba(40, 30, 10, .06);
+}
+/* Dark: black, warm white, bright gold */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0a0a0b;
+    --card: #121214;
+    --ink: #f2ecdf;
+    --muted: #938b7b;
+    --line: rgba(212, 175, 97, .16);
+    --gold: #d4af61;
+    --gold-hi: #f0d58f;
+    --on-gold: #0a0a0b;
+    --now: rgba(212, 175, 97, .09);
+    --hero-bg: linear-gradient(160deg, #1a170f, #0d0d0e 70%);
+    --hero-line: rgba(212, 175, 97, .35);
+    --hero-sub: #cdbf9f;
+    --hero-glow: rgba(240, 213, 143, .16);
+    --count-grad: linear-gradient(180deg, #f6e3ad, #c9a050);
+    --shadow: none;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0a0a0b;
+  --card: #121214;
+  --ink: #f2ecdf;
+  --muted: #938b7b;
+  --line: rgba(212, 175, 97, .16);
+  --gold: #d4af61;
+  --gold-hi: #f0d58f;
+  --on-gold: #0a0a0b;
+  --now: rgba(212, 175, 97, .09);
+  --hero-bg: linear-gradient(160deg, #1a170f, #0d0d0e 70%);
+  --hero-line: rgba(212, 175, 97, .35);
+  --hero-sub: #cdbf9f;
+  --hero-glow: rgba(240, 213, 143, .16);
+  --count-grad: linear-gradient(180deg, #f6e3ad, #c9a050);
+  --shadow: none;
+}
+* { box-sizing: border-box; scrollbar-width: none; }
+*::-webkit-scrollbar { display: none; }
+html, body { margin: 0; height: 100%; }
+/* One screen, no page scroll or rubber-band: it should feel like an app on the iPhone home screen. */
+html { overflow: hidden; overscroll-behavior: none; }
+body {
+  position: fixed; inset: 0; overflow: hidden; overscroll-behavior: none;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: "IBM Plex Sans Arabic", system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none; user-select: none;
+  -webkit-text-size-adjust: 100%;
+  touch-action: manipulation;
+}
+button, select, input { font: inherit; color: inherit; }
+/* No blue focus box on tap; a gold ring only for keyboard use. */
+:focus { outline: none; }
+:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+.sheet:focus, .sheet:focus-visible { outline: none; }
+.wrap {
+  height: 100vh; height: 100dvh;
+  max-width: 560px;
+  margin: 0 auto;
+  display: flex; flex-direction: column; gap: clamp(8px, 1.6dvh, 14px);
+  padding: max(12px, env(safe-area-inset-top)) 16px max(12px, env(safe-area-inset-bottom));
+}
+.wrap > * { flex: none; }
+.serif { font-family: "Amiri", serif; }
+
+/* Title line */
+header { display: flex; align-items: center; gap: 12px; margin-top: 4px; }
+header .where { flex: 1; min-width: 0; }
+header h1 { margin: 0; font-family: "Amiri", serif; font-size: 1.6rem; line-height: 1.2; color: var(--gold); }
+header .date { color: var(--muted); font-size: .88rem; margin-top: 2px; }
+.icon-btn {
+  width: 44px; height: 44px; border-radius: 14px;
+  border: 1px solid var(--line); background: var(--card); color: var(--gold);
+  display: grid; place-items: center; cursor: pointer; flex: none; box-shadow: var(--shadow);
+}
+.icon-btn svg { width: 22px; height: 22px; }
+
+/* Countdown: ivory and gold in light, black and gold in dark */
+.next {
+  position: relative; overflow: hidden;
+  background: var(--hero-bg); color: var(--ink);
+  border: 1px solid var(--hero-line); border-radius: 24px;
+  padding: clamp(12px, 2.4dvh, 22px) 20px clamp(10px, 2.2dvh, 20px); text-align: center; box-shadow: var(--shadow);
+}
+.next::before {
+  content: ""; position: absolute; inset: 0; pointer-events: none;
+  background: radial-gradient(120% 80% at 50% -20%, var(--hero-glow), transparent 60%);
+}
+.next .label { position: relative; font-size: 1rem; color: var(--hero-sub); min-height: 1.5em; }
+.next .count {
+  position: relative;
+  font-size: clamp(2.4rem, min(15vw, 8.5dvh), 4.4rem); font-weight: 600; line-height: 1.15;
+  font-variant-numeric: tabular-nums; direction: ltr; letter-spacing: .02em;
+  background: var(--count-grad); -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.next .count.msg { direction: rtl; font-family: "Amiri", serif; font-size: clamp(2rem, 9vw, 2.8rem); padding: .25em 0; }
+.next .at { position: relative; font-size: .95rem; color: var(--hero-sub); min-height: 1.4em; }
+.next.alert { animation: glow 1.4s ease-in-out infinite; }
+@keyframes glow { 50% { box-shadow: 0 0 0 4px rgba(212, 175, 97, .35); } }
+
+/* Times table */
+/* The table takes the space that is left; its rows share it evenly. */
+.wrap > .times {
+  flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column;
+  background: var(--card); border: 1px solid var(--line); border-radius: 22px; overflow: hidden; box-shadow: var(--shadow);
+}
+.row {
+  flex: 1 1 0; min-height: 0;
+  display: grid; grid-template-columns: 1.1fr 1fr 1fr; align-items: center;
+  padding: 4px 18px; border-top: 1px solid var(--line);
+}
+.row.head { flex: 0 0 auto; }
+.row:first-child { border-top: 0; }
+.row.head { color: var(--muted); font-size: .8rem; padding-block: 10px; letter-spacing: .02em; }
+.row .name { font-family: "Amiri", serif; font-size: 1.35rem; line-height: 1.25; }
+.row .t { font-size: 1.12rem; font-weight: 500; font-variant-numeric: tabular-nums; text-align: center; }
+.row .iq { color: var(--gold); }
+.row.head .t { font-size: .8rem; font-weight: 400; }
+.row.sun { color: var(--muted); flex-grow: .7; }
+.row.sun .name { font-size: 1.05rem; }
+.row.sun .t { font-size: .92rem; font-weight: 400; }
+.row.now { background: var(--now); box-shadow: inset -3px 0 0 var(--gold); }
+.row.now .name { color: var(--gold); }
+.row .note { display: block; font-family: "IBM Plex Sans Arabic", sans-serif; font-size: .72rem; color: var(--muted); }
+
+/* Radio */
+.radio {
+  width: 100%;
+  display: flex; align-items: center; gap: 14px;
+  background: var(--card); border: 1px solid var(--line); border-radius: 22px;
+  padding: clamp(8px, 1.5dvh, 14px) 16px; cursor: pointer; text-align: start; box-shadow: var(--shadow);
+  transition: transform .12s ease;
+}
+.radio:active { transform: scale(.985); }
+.radio .play {
+  width: clamp(44px, 6.4dvh, 54px); height: clamp(44px, 6.4dvh, 54px); border-radius: 50%; flex: none;
+  background: linear-gradient(180deg, var(--gold-hi), var(--gold)); color: var(--on-gold);
+  display: grid; place-items: center;
+}
+.radio .play svg { width: 24px; height: 24px; }
+.radio .txt { flex: 1; }
+.radio .txt b { display: block; font-family: "Amiri", serif; font-size: 1.3rem; line-height: 1.3; }
+.radio .txt > span { color: var(--muted); font-size: .84rem; }
+/* Red live badge; the dot pulses while the radio plays */
+.live {
+  display: inline-flex; align-items: center; gap: 5px; vertical-align: middle; margin-inline-start: 6px;
+  font-family: "IBM Plex Sans Arabic", sans-serif; font-size: .7rem; font-weight: 600; line-height: 1;
+  color: #e5484d; background: rgba(229, 72, 77, .12); border: 1px solid rgba(229, 72, 77, .35);
+  padding: 3px 7px 4px; border-radius: 999px;
+}
+.live i { width: 7px; height: 7px; border-radius: 50%; background: #e5484d; flex: none; }
+.radio.on .live i { animation: live 1.4s ease-in-out infinite; }
+@keyframes live { 0%, 100% { box-shadow: 0 0 0 0 rgba(229, 72, 77, .6); } 50% { box-shadow: 0 0 0 5px rgba(229, 72, 77, 0); opacity: .75; } }
+.bars { display: none; gap: 3px; align-items: end; height: 20px; }
+.radio.on .bars { display: flex; }
+.bars i { width: 4px; background: var(--gold); border-radius: 2px; animation: bar 1s ease-in-out infinite; }
+.bars i:nth-child(2) { animation-delay: .2s; } .bars i:nth-child(3) { animation-delay: .4s; } .bars i:nth-child(4) { animation-delay: .6s; }
+@keyframes bar { 0%, 100% { height: 5px; } 50% { height: 20px; } }
+@media (prefers-reduced-motion: reduce) { .bars i, .next.alert, .radio.on .live i { animation: none; } .bars i { height: 12px; } }
+
+footer { text-align: center; color: var(--muted); font-size: .74rem; line-height: 1.6; }
+footer::before { content: "◆"; color: var(--gold); font-size: .55rem; margin-inline-end: 6px; opacity: .8; }
+
+/* Short phones (iPhone SE, mini): tighter, drop the small extras. */
+@media (max-height: 740px) {
+  footer, .row .note { display: none; }
+  header h1 { font-size: 1.4rem; }
+  .row .name { font-size: 1.22rem; }
+  .row .t { font-size: 1.05rem; }
+}
+
+/* First visit: a centred welcome card that explains everything */
+dialog.welcome {
+  margin: auto; width: min(420px, calc(100% - 32px)); border-radius: 26px; border: 1px solid var(--hero-line);
+  max-height: calc(100dvh - 32px); background: var(--card);
+}
+dialog.welcome[open] { animation: pop-in .5s var(--ease-out) both; }
+dialog.welcome.closing { animation: pop-out .22s var(--ease-in) both; }
+@keyframes pop-in { from { opacity: 0; transform: translateY(12px) scale(.94); } }
+@keyframes pop-out { to { opacity: 0; transform: scale(.96); } }
+.welcome .in { padding: 26px 22px 20px; text-align: center; }
+.welcome .logo { width: 64px; height: 64px; border-radius: 18px; margin: 0 auto 10px; display: block; box-shadow: 0 6px 18px rgba(0, 0, 0, .25); }
+.welcome h2 { margin: 0; font-family: "Amiri", serif; font-size: 1.7rem; color: var(--gold); }
+.welcome .lead { color: var(--muted); font-size: .9rem; margin: 4px 0 16px; }
+.welcome ul { list-style: none; margin: 0 0 16px; padding: 0; text-align: start; display: grid; gap: 10px; }
+.welcome li { display: flex; gap: 10px; align-items: flex-start; font-size: .92rem; line-height: 1.5; }
+.welcome li::before { content: "◆"; color: var(--gold); font-size: .6rem; margin-top: .55em; flex: none; }
+.welcome .box { background: var(--bg); border: 1px solid var(--line); border-radius: 16px; padding: 12px 14px; margin-bottom: 14px; text-align: start; }
+.welcome .box[hidden] { display: none; }
+.welcome .box b.t { display: block; color: var(--gold); margin-bottom: 6px; }
+.welcome ol { margin: 0; padding-inline-start: 22px; font-size: .9rem; line-height: 1.8; list-style: decimal; }
+.welcome ol li { display: list-item; }
+.welcome ol li::before { content: none; }
+.welcome ol li::marker { color: var(--gold); font-weight: 600; }
+.welcome .share { display: inline-block; width: 16px; height: 16px; vertical-align: -2px; color: var(--gold); }
+.welcome .box p { margin: 0 0 10px; font-size: .88rem; color: var(--muted); line-height: 1.6; }
+.welcome .actions { display: grid; gap: 8px; }
+.welcome .ghost { background: none; border: 0; color: var(--muted); padding: 10px; cursor: pointer; font-size: .95rem; }
+
+/* Last minute before iqama: the whole screen counts down */
+.iqama {
+  position: fixed; inset: 0; z-index: 20;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2dvh;
+  padding: max(24px, env(safe-area-inset-top)) 24px max(24px, env(safe-area-inset-bottom));
+  background: var(--bg); text-align: center; cursor: pointer;
+  animation: fade .3s ease-out;
+}
+.iqama[hidden] { display: none; }
+@keyframes fade { from { opacity: 0; } }
+.iqama .what { font-family: "Amiri", serif; font-size: clamp(2rem, 9vw, 3rem); color: var(--gold); line-height: 1.2; }
+.iqama .ring { position: relative; width: min(78vw, 46dvh); aspect-ratio: 1; }
+.iqama svg { position: absolute; inset: 0; width: 100%; height: 100%; transform: rotate(-90deg); }
+.iqama circle { fill: none; stroke-width: 6; }
+.iqama .track { stroke: var(--line); }
+.iqama .arc { stroke: var(--gold); stroke-linecap: round; transition: stroke-dashoffset .95s linear; }
+.iqama .sec {
+  position: absolute; inset: 0; display: grid; place-items: center;
+  font-size: clamp(5rem, 30vw, 9rem); font-weight: 600; font-variant-numeric: tabular-nums; line-height: 1;
+  background: var(--count-grad); -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.iqama .sub { color: var(--muted); font-size: 1rem; }
+.iqama.now .ring { display: none; }
+.iqama.now .what { font-size: clamp(2.6rem, 12vw, 4rem); animation: breathe 1.6s ease-in-out infinite; }
+@keyframes breathe { 50% { opacity: .7; } }
+@media (prefers-reduced-motion: reduce) { .iqama, .iqama.now .what { animation: none; } .iqama .arc { transition: none; } }
+
+/* Settings */
+dialog {
+  border: 0; padding: 0; width: min(560px, 100%); max-width: 100%;
+  max-height: calc(100dvh - max(12px, env(safe-area-inset-top)) - 8px);
+  background: var(--bg); color: var(--ink); border-radius: 24px 24px 0 0;
+  margin: auto auto 0; overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch;
+  border-top: 1px solid var(--line);
+}
+dialog[open] { animation: sheet-in .42s var(--ease-out) both; }
+dialog[open]::backdrop { animation: fade-in .3s ease-out both; }
+dialog.closing { animation: sheet-out .26s var(--ease-in) both; }
+dialog.closing::backdrop { animation: fade-out .26s ease-in both; }
+@keyframes sheet-in { from { transform: translateY(100%); } }
+@keyframes sheet-out { to { transform: translateY(100%); } }
+@keyframes fade-in { from { opacity: 0; } }
+@keyframes fade-out { to { opacity: 0; } }
+@media (min-width: 600px) {
+  @keyframes sheet-in { from { transform: translateY(24px) scale(.98); opacity: 0; } }
+  @keyframes sheet-out { to { transform: translateY(16px) scale(.98); opacity: 0; } }
+}
+dialog::backdrop { background: rgba(0, 0, 0, .55); }
+@media (min-width: 600px) { dialog { border-radius: 24px; margin: auto; border: 1px solid var(--line); } }
+.sheet { padding: 18px 16px max(24px, calc(env(safe-area-inset-bottom) + 12px)); }
+.sheet h2 { margin: 0 0 14px; font-family: "Amiri", serif; font-size: 1.5rem; color: var(--gold); display: flex; justify-content: space-between; align-items: center; }
+.group { background: var(--card); border: 1px solid var(--line); border-radius: 18px; margin-bottom: 14px; }
+.group > .gt { padding: 12px 16px 0; color: var(--muted); font-size: .82rem; }
+.field { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 16px; border-top: 1px solid var(--line); }
+.group > .gt + .field, .group > .gt + div > .field:first-child { border-top: 0; }
+.field[hidden] { display: none; }
+.field label { font-weight: 500; }
+select {
+  background: var(--bg); border: 1px solid var(--line); border-radius: 12px;
+  padding: 8px 10px; min-width: 0; max-width: 62%;
+  font-size: 16px;   /* below 16px iPhone zooms in on tap */
+}
+.step { display: flex; align-items: center; gap: 4px; direction: ltr; }
+.step button {
+  width: 40px; height: 40px; border-radius: 12px; border: 1px solid var(--line);
+  background: var(--bg); color: var(--gold); cursor: pointer; font-size: 1.2rem; line-height: 1;
+}
+.step output { min-width: 64px; text-align: center; font-variant-numeric: tabular-nums; direction: rtl; }
+.wide-btn {
+  width: 100%; padding: 12px; border-radius: 14px; border: 0;
+  background: linear-gradient(180deg, var(--gold-hi), var(--gold)); color: var(--on-gold); font-weight: 600; cursor: pointer;
+}
+.link-btn { background: none; border: 0; color: var(--gold); cursor: pointer; padding: 8px 0; font-family: "IBM Plex Sans Arabic", sans-serif; font-size: 1rem; font-weight: 600; }
+.small { color: var(--muted); font-size: .8rem; padding: 0 16px 12px; }
+.small:empty { display: none; }
+.seg { display: flex; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; flex: none; }
+.seg button { border: 0; background: var(--bg); padding: 8px 12px; cursor: pointer; }
+.seg button[aria-pressed="true"] { background: var(--gold); color: var(--on-gold); font-weight: 600; }
+
+/* ---- Motion: short, soft, transform/opacity only ---- */
+:root { --ease-out: cubic-bezier(.16, 1, .3, 1); --ease-in: cubic-bezier(.4, 0, 1, 1); }
+/* Page comes in piece by piece */
+.wrap > * { animation: rise .7s var(--ease-out) both; }
+.wrap > :nth-child(2) { animation-delay: .06s; }
+.wrap > :nth-child(3) { animation-delay: .12s; }
+.wrap > :nth-child(4) { animation-delay: .18s; }
+.wrap > :nth-child(n+5) { animation-delay: .24s; }
+.row { animation: rise .6s var(--ease-out) both; animation-delay: calc(.14s + var(--i, 0) * .045s); }
+@keyframes rise { from { opacity: 0; transform: translateY(14px); } }
+/* Current prayer highlight glides in */
+.row { transition: background-color .6s ease, box-shadow .6s ease; }
+.row .name { transition: color .6s ease; }
+/* Countdown digits: each one rolls in on its own */
+.next .count.digits { background: none; color: inherit; }
+.next .count .d {
+  display: inline-block; min-width: .6em; text-align: center;
+  background: var(--count-grad); -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.next .count .c { display: inline-block; background: var(--count-grad); -webkit-background-clip: text; background-clip: text; color: transparent; }
+/* Press feedback */
+.icon-btn, .step button, .seg button, .wide-btn, .link-btn, .radio .play {
+  transition: transform .18s var(--ease-out), background-color .25s ease, color .25s ease, opacity .2s ease;
+}
+.icon-btn:active, .step button:active, .wide-btn:active, .radio:active .play { transform: scale(.92); }
+.seg button:active, .link-btn:active { opacity: .7; }
+.radio { transition: transform .2s var(--ease-out), border-color .3s ease; }
+.radio.on { border-color: var(--hero-line); }
+.icon-btn svg { transition: transform .5s var(--ease-out); }
+.icon-btn:active svg { transform: rotate(60deg); }
+@media (prefers-reduced-motion: reduce) {
+  .wrap > *, .row, dialog[open], dialog[open]::backdrop, dialog.closing, dialog.closing::backdrop { animation: none !important; }
+}
+
+/* Larger screens: a mosque tablet or a TV browser */
+@media (min-width: 900px) and (min-height: 600px) {
+  .wrap { max-width: 760px; }
+  .row { padding-inline: 26px; }
+  .row .name { font-size: 1.8rem; }
+  .row .t { font-size: 1.5rem; }
+}
+
+/* In-page notice: slides down from the top, then leaves on its own */
+.toast {
+  position: fixed; z-index: 15; left: 50%; top: max(12px, env(safe-area-inset-top));
+  width: max-content; max-width: min(440px, calc(100% - 32px));
+  display: flex; align-items: center; gap: 12px; padding: 10px 18px 10px 12px;
+  background: var(--card); color: var(--ink); border: 1px solid var(--hero-line); border-radius: 18px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, .2); cursor: pointer;
+  opacity: 0; visibility: hidden; transform: translate(-50%, -18px) scale(.97);
+  transition: opacity .3s ease, transform .5s var(--ease-out), visibility 0s linear .5s;
+}
+.toast.show { opacity: 1; visibility: visible; transform: translate(-50%, 0); transition-delay: 0s; }
+.toast .bell {
+  width: 38px; height: 38px; border-radius: 50%; flex: none; display: grid; place-items: center;
+  background: linear-gradient(180deg, var(--gold-hi), var(--gold)); color: var(--on-gold);
+}
+.toast .bell svg { width: 20px; height: 20px; }
+.toast.show .bell svg { animation: ring .9s var(--ease-out) .15s; transform-origin: 50% 10%; }
+@keyframes ring { 20% { transform: rotate(14deg); } 45% { transform: rotate(-11deg); } 70% { transform: rotate(6deg); } }
+.toast b { display: block; font-weight: 600; font-size: .98rem; line-height: 1.35; }
+.toast span.s { display: block; color: var(--muted); font-size: .8rem; }
+.toast span.s:empty { display: none; }
+@media (prefers-reduced-motion: reduce) {
+  .toast { transform: translate(-50%, 0); transition: opacity .2s ease, visibility 0s linear .2s; }
+  .toast.show .bell svg { animation: none; }
+}
+.field .hint { display: block; color: var(--muted); font-size: .76rem; font-weight: 400; margin-top: 2px; }
+
+/* Phone on its side: header across the top, countdown and radio on the right (read first), the table beside them. */
+@media (orientation: landscape) and (max-height: 560px) {
+  .wrap {
+    max-width: 1100px;
+    display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr);
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    grid-template-areas: "head head" "next times" "radio times";
+    gap: 10px 14px;
+    padding: max(10px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(10px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+  }
+  header { grid-area: head; margin-top: 0; }
+  header .where { display: flex; align-items: baseline; gap: 4px 14px; flex-wrap: wrap; }
+  header h1 { font-size: 1.35rem; }
+  header .date { margin-top: 0; }
+  .icon-btn { width: 40px; height: 40px; border-radius: 12px; }
+  .next { grid-area: next; display: flex; flex-direction: column; justify-content: center; padding: 10px 16px; }
+  .next .count { font-size: clamp(2rem, min(15dvh, 6.4vw), 4rem); white-space: nowrap; }
+  .next .count.msg { font-size: clamp(1.7rem, 9dvh, 2.4rem); }
+  .wrap > .times { grid-area: times; }
+  .row { padding: 2px 18px; }
+  .row.head { padding-block: 7px; }
+  .row .name { font-size: 1.22rem; }
+  .row .t { font-size: 1.05rem; }
+  .radio { grid-area: radio; padding: 8px 14px; gap: 12px; }
+  .radio .play { width: 44px; height: 44px; }
+  .radio .txt b { font-size: 1.15rem; }
+  .radio .txt > span { font-size: .78rem; }
+  footer { display: none; }
+
+  /* Iqama countdown: the ring beside the words */
+  .iqama {
+    display: grid; grid-template-columns: auto auto; grid-template-areas: "what ring" "sub ring";
+    align-content: center; justify-content: center; gap: 10px 8vw;
+    padding-inline: max(24px, env(safe-area-inset-right)) max(24px, env(safe-area-inset-left));
+  }
+  .iqama .what { grid-area: what; align-self: end; text-align: start; font-size: clamp(2rem, 12dvh, 3.2rem); }
+  .iqama .sub { grid-area: sub; align-self: start; text-align: start; }
+  .iqama .ring { grid-area: ring; width: min(74dvh, 40vw); }
+  .iqama .sec { font-size: min(32dvh, 9rem); }
+  .iqama.now { grid-template-columns: auto; grid-template-areas: "what" "sub"; }
+  .iqama.now .what, .iqama.now .sub { text-align: center; }
+  .iqama.now .what { font-size: clamp(2.4rem, 16dvh, 4rem); }
+
+  /* Settings: a wider centred card, groups in two columns so little needs scrolling */
+  dialog#settings {
+    width: min(820px, calc(100% - 24px - env(safe-area-inset-left) - env(safe-area-inset-right)));
+    max-height: calc(100dvh - 16px); margin: auto; border-radius: 22px; border: 1px solid var(--line);
+  }
+  .sheet { columns: 2; column-gap: 12px; padding: 14px 14px max(14px, env(safe-area-inset-bottom)); }
+  .sheet h2 { column-span: all; margin-bottom: 10px; font-size: 1.35rem; }
+  .group { break-inside: avoid; margin-bottom: 12px; }
+  .field { padding-block: 9px; }
+  .step button { width: 36px; height: 36px; }
+
+  /* Welcome: the greeting and buttons on one side, what the app does on the other */
+  dialog.welcome { width: min(800px, calc(100% - 32px - env(safe-area-inset-left) - env(safe-area-inset-right))); max-height: calc(100dvh - 20px); }
+  .welcome .in {
+    display: grid; grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr); grid-template-rows: 1fr auto;
+    gap: 0 22px; padding: 14px 18px 12px; align-items: center;
+  }
+  .welcome .wa { grid-column: 1; grid-row: 1; align-self: end; }
+  .welcome .actions { grid-column: 1; grid-row: 2; align-self: start; margin-top: 14px; }
+  .welcome .wb { grid-column: 2; grid-row: 1 / span 2; }
+  .welcome .logo { width: 56px; height: 56px; }
+  .welcome h2 { font-size: 1.5rem; }
+  .welcome .lead { margin-bottom: 0; }
+  .welcome ul { gap: 4px; margin-bottom: 8px; }
+  .welcome li { font-size: .82rem; line-height: 1.4; }
+  .welcome li::before { margin-top: .5em; }
+  .welcome .box { padding: 7px 12px; margin-bottom: 6px; }
+  .welcome .box b.t { margin-bottom: 2px; }
+  .welcome .box:last-child { margin-bottom: 0; }
+  .welcome ol { font-size: .82rem; line-height: 1.5; }
+  .welcome .box p { margin-bottom: 0; font-size: .8rem; line-height: 1.5; }
+}
+</style>
+<script src="push.js" defer></script>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="where">
+      <h1 id="city">—</h1>
+      <div class="date" id="date"></div>
+    </div>
+    <button class="icon-btn" id="openSettings" aria-label="الإعدادات">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+    </button>
+  </header>
+
+  <section class="next" id="next" aria-live="polite">
+    <div class="label" id="nextLabel">…</div>
+    <div class="count" id="nextCount">--:--:--</div>
+    <div class="at" id="nextAt"></div>
+  </section>
+
+  <section class="times" id="times" aria-label="أوقات اليوم"></section>
+
+  <button class="radio" id="radio" aria-pressed="false">
+    <span class="play" id="radioIcon"></span>
+    <span class="txt"><b>إذاعة القرآن الكريم <span class="live"><i></i>مباشر</span></b><span id="radioState"></span></span>
+    <span class="bars" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+  </button>
+  <audio id="audio" preload="none"></audio>
+
+  <footer>تقويم أم القرى · مجاني وبدون إعلانات</footer>
+</div>
+
+<dialog id="settings">
+  <form method="dialog" class="sheet" tabindex="-1" autofocus>
+    <h2>الإعدادات <button type="button" class="link-btn" id="sheetDone">تم</button></h2>
+
+    <div class="group">
+      <div class="gt">المدينة</div>
+      <div class="field">
+        <label for="citySel">المدينة</label>
+        <select id="citySel"></select>
+      </div>
+      <div class="field">
+        <button type="button" class="wide-btn" id="locate">حدّد موقعي</button>
+      </div>
+      <div class="small" id="locateMsg"></div>
+    </div>
+
+    <div class="group">
+      <div class="gt">الإقامة بعد الأذان (بالدقائق)</div>
+      <div id="iqamaFields"></div>
+      <div class="small">يوم الجمعة ما فيه إقامة للظهر.</div>
+    </div>
+
+    <div class="group">
+      <div class="gt">التنبيهات</div>
+      <div class="field">
+        <label>قبل الأذان بـ 5 دقائق</label>
+        <div class="seg" id="preSeg">
+          <button type="button" data-v="on">شغّال</button>
+          <button type="button" data-v="off">طافي</button>
+        </div>
+      </div>
+      <div class="field">
+        <label>تذكير المؤذن قبل الأذان بنص ساعة<span class="hint">للمؤذن إذا مسجده بعيد</span></label>
+        <div class="seg" id="muezSeg">
+          <button type="button" data-v="on">شغّال</button>
+          <button type="button" data-v="off">طافي</button>
+        </div>
+      </div>
+      <div class="field">
+        <label>قبل الإقامة بدقيقتين</label>
+        <div class="seg" id="warnSeg">
+          <button type="button" data-v="on">شغّال</button>
+          <button type="button" data-v="off">طافي</button>
+        </div>
+      </div>
+      <div class="field" id="notifyRow">
+        <button type="button" class="wide-btn" id="notifyBtn">السماح بالإشعارات</button>
+      </div>
+      <div class="small" id="notifyMsg">صوت تنبيه وإشعار للتنبيهات الشغّالة، وقبل الإقامة بدقيقة عداد بكامل الشاشة.</div>
+    </div>
+
+    <div class="group">
+      <div class="gt">العرض</div>
+      <div class="field">
+        <label>الساعة</label>
+        <div class="seg" id="clockSeg">
+          <button type="button" data-v="12">12 ساعة</button>
+          <button type="button" data-v="24">24 ساعة</button>
+        </div>
+      </div>
+      <div class="field">
+        <label>الشروق</label>
+        <div class="seg" id="sunSeg">
+          <button type="button" data-v="hide">مخفي</button>
+          <button type="button" data-v="show">ظاهر</button>
+        </div>
+      </div>
+      <div class="field">
+        <label>الألوان</label>
+        <div class="seg" id="themeSeg">
+          <button type="button" data-v="auto">تلقائي</button>
+          <button type="button" data-v="light">فاتح</button>
+          <button type="button" data-v="dark">داكن</button>
+        </div>
+      </div>
+      <div class="field">
+        <label for="method">طريقة الحساب</label>
+        <select id="method"></select>
+      </div>
+    </div>
+
+    <button type="button" class="link-btn" id="reset">إرجاع الإعدادات الافتراضية</button>
+  </form>
+</dialog>
+
+<dialog class="welcome" id="welcome" aria-labelledby="wTitle">
+  <div class="in" tabindex="-1" autofocus>
+    <div class="wa">
+    <img class="logo" src="icon-180.png" alt="">
+    <h2 id="wTitle">أهلاً بك</h2>
+    <div class="lead">أوقات الأذان والإقامة، وإذاعة القرآن الكريم</div>
+    </div>
+    <div class="wb">
+    <ul>
+      <li>عداد للأذان والإقامة الجاية، على تقويم أم القرى.</li>
+      <li>تنبيه بصوت وإشعار قبل الأذان بـ 5 دقائق وقبل الإقامة بدقيقتين.</li>
+      <li>قبل الإقامة بدقيقة: عداد بكامل الشاشة.</li>
+      <li>إذاعة القرآن الكريم بث مباشر بضغطة وحدة.</li>
+      <li>المدينة ودقائق الإقامة تتعدل من زر الإعدادات، وتنحفظ في جوالك.</li>
+    </ul>
+
+    <div class="box" id="wInstall" hidden>
+      <b class="t">ثبّته في جوالك مثل التطبيق</b>
+      <ol>
+        <li>اضغط زر المشاركة <svg class="share" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 8l5-5 5 5"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg> تحت في Safari</li>
+        <li>اختر «إضافة إلى الشاشة الرئيسية»</li>
+        <li>افتحه من أيقونته، وفعّل الإشعارات من هناك</li>
+      </ol>
+    </div>
+
+    <div class="box" id="wNotify" hidden>
+      <b class="t">الإشعارات</b>
+      <p>يطلع لك إشعار قبل الأذان بـ 5 دقائق وقبل الإقامة بدقيقتين. تقدر تغيّرها بعدين من الإعدادات.</p>
+    </div>
+    </div>
+
+    <div class="actions">
+      <button type="button" class="wide-btn" id="wAllow" hidden>السماح بالإشعارات</button>
+      <button type="button" class="wide-btn" id="wStart">تمام، ابدأ</button>
+      <button type="button" class="ghost" id="wLater" hidden>لاحقاً</button>
+    </div>
+  </div>
+</dialog>
+
+<div class="iqama" id="iqama" hidden role="alertdialog" aria-live="assertive">
+  <div class="what" id="iqWhat"></div>
+  <div class="ring">
+    <svg viewBox="0 0 100 100" aria-hidden="true"><circle class="track" cx="50" cy="50" r="46"/><circle class="arc" id="iqArc" cx="50" cy="50" r="46" pathLength="60" stroke-dasharray="60" stroke-dashoffset="0"/></svg>
+    <div class="sec" id="iqSec">60</div>
+  </div>
+  <div class="sub" id="iqSub">اضغط في أي مكان للإغلاق</div>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite">
+  <span class="bell"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg></span>
+  <span><b id="toastT"></b><span class="s" id="toastS"></span></span>
+</div>
+
+<script>
+"use strict";
+
+// Saudi Quran Radio, the same live stream the TV app plays.
+const RADIO_URL = "https://stream.radiojar.com/0tpy1h0kxtzuv";
+
+const PRAYERS = [
+  { key: "fajr", name: "الفجر" },
+  { key: "sunrise", name: "الشروق", sun: true },
+  { key: "dhuhr", name: "الظهر" },
+  { key: "asr", name: "العصر" },
+  { key: "maghrib", name: "المغرب" },
+  { key: "isha", name: "العشاء" },
+];
+
+// Saudi cities (GeoNames coordinates).
+const CITIES = [
+  ["مكة المكرمة", 21.4266, 39.8256], ["المدينة المنورة", 24.4686, 39.6142], ["الرياض", 24.6877, 46.7219],
+  ["جدة", 21.4901, 39.1862], ["الدمام", 26.4344, 50.1033], ["الخبر", 26.2794, 50.2083],
+  ["الظهران", 26.2886, 50.1140], ["الطائف", 21.2703, 40.4158], ["بريدة", 26.3260, 43.9750],
+  ["عنيزة", 26.1000, 44.0000], ["الرس", 25.8694, 43.4973], ["تبوك", 28.3998, 36.5715],
+  ["حائل", 27.5219, 41.6907], ["أبها", 18.2164, 42.5053], ["خميس مشيط", 18.3000, 42.7333],
+  ["نجران", 17.4933, 44.1277], ["جازان", 16.8892, 42.5511], ["الباحة", 20.0129, 41.4677],
+  ["الأحساء (الهفوف)", 25.3647, 49.5876], ["الجبيل", 27.0174, 49.6225], ["القطيف", 26.5654, 50.0089],
+  ["حفر الباطن", 28.4328, 45.9708], ["الخرج", 24.1554, 47.3346], ["ينبع", 24.0895, 38.0618],
+  ["عرعر", 30.9753, 41.0381], ["سكاكا", 29.9697, 40.2064], ["القريات", 31.3318, 37.3428],
+  ["بيشة", 20.0005, 42.6052], ["الزلفي", 26.2995, 44.8154], ["الدوادمي", 24.5077, 44.3924],
+  ["رابغ", 22.7986, 39.0349], ["صبيا", 17.1495, 42.6254],
+];
+
+const METHODS = [
+  ["UmmAlQura", "أم القرى (السعودية)"],
+  ["MuslimWorldLeague", "رابطة العالم الإسلامي"],
+  ["Egyptian", "الهيئة المصرية"],
+  ["Dubai", "دبي"],
+  ["Kuwait", "الكويت"],
+  ["Qatar", "قطر"],
+  ["Karachi", "كراتشي"],
+  ["Turkey", "تركيا"],
+  ["NorthAmerica", "أمريكا الشمالية"],
+];
+
+const DEFAULTS = {
+  city: 0,                 // index in CITIES, or -1 for "my location"
+  lat: null, lng: null,
+  method: "UmmAlQura",
+  // Minutes from adhan to iqama: the usual practice in Saudi mosques.
+  iqama: { fajr: 25, dhuhr: 20, asr: 20, maghrib: 10, isha: 20 },
+  clock: "12",
+  sunrise: "hide",         // the sunrise row is hidden unless turned on
+  warn: "on",              // chime + notification two minutes before iqama
+  preAdhan: "on",          // chime + notification five minutes before adhan
+  muezzin: "off",          // half an hour before adhan, for a muezzin whose mosque is far
+  theme: "auto",
+};
+
+// ---- Settings, kept on this device only ----
+const KEY = "adhan-web";
+function load() {
+  try {
+    const s = JSON.parse(localStorage.getItem(KEY) || "null");
+    if (s) return { ...DEFAULTS, ...s, iqama: { ...DEFAULTS.iqama, ...s.iqama } };
+  } catch (e) {}
+  return JSON.parse(JSON.stringify(DEFAULTS));
+}
+function save() {
+  try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {}
+}
+let S = load();
+// Ask the browser to keep this site's data (settings survive storage clean-ups).
+if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
+
+// ---- Time helpers ----
+function zone() { return S.city === -1 ? Intl.DateTimeFormat().resolvedOptions().timeZone : "Asia/Riyadh"; }
+
+function ymd(date, tz) {
+  const p = {};
+  for (const x of new Intl.DateTimeFormat("en-CA", { timeZone: tz, year: "numeric", month: "2-digit", day: "2-digit" }).formatToParts(date)) p[x.type] = x.value;
+  return [+p.year, +p.month, +p.day];
+}
+
+const hijriFmt = new Intl.DateTimeFormat("ar-SA-u-ca-islamic-umalqura-nu-latn", { day: "numeric", month: "long", year: "numeric" });
+const hijriMonth = new Intl.DateTimeFormat("en-u-ca-islamic-umalqura-nu-latn", { month: "numeric" });
+const isRamadan = d => parseInt(hijriMonth.format(d), 10) === 9;
+
+// Formatters are costly to build; keep one per zone and clock style.
+const fmtCache = new Map();
+function fmt(date) {
+  const key = zone() + S.clock;
+  if (!fmtCache.has(key)) fmtCache.set(key, new Intl.DateTimeFormat("ar-SA-u-nu-latn", {
+    timeZone: zone(), hour: "numeric", minute: "2-digit", hour12: S.clock !== "24",
+  }));
+  return fmtCache.get(key).format(date);
+}
+
+// ---- Prayer times (batoulapps adhan, Umm al-Qura by default) ----
+function place() {
+  if (S.city === -1 && S.lat != null) return { name: "موقعي", lat: S.lat, lng: S.lng };
+  const c = CITIES[S.city] || CITIES[0];
+  return { name: c[0], lat: c[1], lng: c[2] };
+}
+
+// Prayer times for today + offset days, in the place's own calendar day.
+// Computed once per day and settings, not on every tick.
+const dayCache = new Map();
+function day(offset) {
+  const [y, m, d] = ymd(new Date(), zone());
+  const key = `${y}-${m}-${d + offset}`;
+  if (!dayCache.has(key)) dayCache.set(key, computeDay(new Date(y, m - 1, d + offset, 12)));
+  return dayCache.get(key);
+}
+
+function computeDay(local) {
+  const p = place();
+  const params = adhan.CalculationMethod[S.method]();
+  // Umm al-Qura: Isha 120 min after Maghrib in Ramadan instead of 90 (official KACST timetable).
+  if (S.method === "UmmAlQura" && isRamadan(local)) params.ishaInterval = 120;
+  // Rounding up matches the official Makkah timetable exactly for 37 of 40 sampled times (nearest: 22).
+  if (S.method === "UmmAlQura") params.rounding = adhan.Rounding.Up;
+  const t = new adhan.PrayerTimes(new adhan.Coordinates(p.lat, p.lng), local, params);
+  const friday = local.getDay() === 5;
+  return { local, friday, t, events: dayEvents(friday, t) };
+}
+
+function events(offset) { return day(offset).events; }
+
+// Adhan and iqama events of a day, in order. Friday Dhuhr is Jumu'ah, with no iqama.
+function dayEvents(friday, t) {
+  const list = [];
+  for (const p of PRAYERS) {
+    if (p.sun) continue;
+    const at = t[p.key];
+    const jumuah = friday && p.key === "dhuhr";
+    list.push({ p, kind: "adhan", at, jumuah });
+    const min = S.iqama[p.key];
+    if (!jumuah && min > 0) list.push({ p, kind: "iqama", at: new Date(at.getTime() + min * 6e4), jumuah });
+  }
+  return list;
+}
+
+function nextEvent(now) {
+  for (const o of [0, 1, 2]) {
+    const e = events(o).find(e => e.at > now);
+    if (e) return e;
+  }
+}
+
+function title(e) {
+  if (e.kind === "iqama") return `إقامة ${e.p.name}`;
+  return e.jumuah ? "أذان الجمعة" : `أذان ${e.p.name}`;
+}
+
+// ---- Rendering ----
+const $ = id => document.getElementById(id);
+let renderedFor = "";
+
+function renderTable() {
+  const { local, friday, t } = day(0);
+  $("city").textContent = place().name;
+  const g = new Intl.DateTimeFormat("ar-SA-u-ca-gregory-nu-latn", { weekday: "long", day: "numeric", month: "long" }).format(local);
+  $("date").textContent = `${g} · ${hijriFmt.format(local)}`;
+
+  let i = 0;
+  let html = `<div class="row head"><span>الصلاة</span><span class="t">الأذان</span><span class="t">الإقامة</span></div>`;
+  for (const pr of PRAYERS) {
+    const at = t[pr.key];
+    if (pr.sun) {
+      if (S.sunrise !== "show") continue;
+      html += `<div class="row sun" style="--i:${i++}" data-k="${pr.key}"><span class="name">${pr.name}</span><span class="t">${fmt(at)}</span><span class="t"></span></div>`;
+      continue;
+    }
+    const jumuah = friday && pr.key === "dhuhr";
+    const min = S.iqama[pr.key];
+    const none = jumuah || !min;
+    const iq = none ? "—" : fmt(new Date(at.getTime() + min * 6e4));
+    const note = none ? "" : `<span class="note">بعد ${min} دقيقة</span>`;
+    html += `<div class="row" style="--i:${i++}" data-k="${pr.key}"><span class="name">${jumuah ? "الجمعة" : pr.name}${note}</span><span class="t">${fmt(at)}</span><span class="t iq">${iq}</span></div>`;
+  }
+  $("times").innerHTML = html;
+}
+
+const pad = n => String(n).padStart(2, "0");
+let alert = null;   // { text, at, until } while an adhan or iqama has just come
+let curPrayer = null;
+
+const calm = matchMedia("(prefers-reduced-motion: reduce)");
+
+// The countdown: one span per character, and only a digit that changes rolls in.
+function setCount(text, message) {
+  const el = $("nextCount");
+  if (message) {
+    if (el.dataset.mode !== "msg") { el.dataset.mode = "msg"; el.classList.remove("digits"); el.textContent = text; soft(el); }
+    else if (el.textContent !== text) el.textContent = text;
+    return;
+  }
+  const fresh = el.dataset.mode !== "digits" || el.children.length !== text.length;
+  if (fresh) {
+    el.dataset.mode = "digits"; el.classList.add("digits");
+    el.innerHTML = [...text].map(ch => `<span class="${/\d/.test(ch) ? "d" : "c"}">${ch}</span>`).join("");
+    return;
+  }
+  [...text].forEach((ch, i) => {
+    const sp = el.children[i];
+    if (sp.textContent === ch) return;
+    sp.textContent = ch;
+    if (!calm.matches && sp.animate) sp.animate(
+      [{ transform: "translateY(-42%)", opacity: 0 }, { transform: "none", opacity: 1 }],
+      { duration: 420, easing: "cubic-bezier(.16, 1, .3, 1)" });
+  });
+}
+
+// A gentle fade/scale for content that swaps.
+function soft(el) {
+  if (!calm.matches && el.animate) el.animate(
+    [{ opacity: 0, transform: "scale(.96)" }, { opacity: 1, transform: "none" }],
+    { duration: 380, easing: "cubic-bezier(.16, 1, .3, 1)" });
+}
+
+// Touch the page only when the text really changes.
+function setText(id, text) { const el = $(id); if (el.textContent !== text) el.textContent = text; }
+
+function tick() {
+  const now = new Date();
+  const key = ymd(now, zone()).join("-") + JSON.stringify(S);
+  if (key !== renderedFor) { renderTable(); renderedFor = key; curPrayer = null; }
+
+  const e = nextEvent(now);
+  if (!e) return;
+  const ms = e.at - now;
+
+  // The moment arrives: show it for two minutes.
+  if (ms <= 1000 && (!alert || alert.at !== e.at.getTime())) {
+    alert = { text: `حان وقت ${title(e)}`, at: e.at.getTime(), until: e.at.getTime() + 120e3 };
+    if (navigator.vibrate) navigator.vibrate([300, 200, 300]);
+  }
+
+  const showing = alert && now < alert.until;
+  $("next").classList.toggle("alert", !!showing);
+  $("nextCount").classList.toggle("msg", !!showing);
+  if (showing) {
+    setText("nextLabel", "");
+    setCount(alert.text, true);
+    setText("nextAt", "");
+  } else {
+    const s = Math.ceil(ms / 1000);
+    setText("nextLabel", `باقي على ${title(e)}`);
+    setCount(`${pad(Math.floor(s / 3600))}:${pad(Math.floor(s / 60) % 60)}:${pad(s % 60)}`);
+    setText("nextAt", `الساعة ${fmt(e.at)}`);
+  }
+
+  adhanWatch(now);
+  iqamaWatch(e, ms, now);
+
+  // Mark the prayer whose time we are in.
+  const cur = day(0).t.currentPrayer(now);
+  if (cur !== curPrayer) {
+    curPrayer = cur;
+    document.querySelectorAll(".row[data-k]").forEach(r => r.classList.toggle("now", r.dataset.k === cur));
+  }
+}
+
+// ---- Before the adhan: a chime and notice at five minutes, and for the muezzin at half an hour ----
+let preWarned = 0, muezWarned = 0;   // adhan times (ms) already handled
+
+function nextAdhan(now) {
+  for (const o of [0, 1]) {
+    const e = events(o).find(e => e.kind === "adhan" && e.at > now);
+    if (e) return e;
+  }
+}
+
+// "5 دقائق", "30 دقيقة", "دقيقتين": Arabic counts, Western digits.
+function minutes(n) {
+  if (n === 1) return "دقيقة";
+  if (n === 2) return "دقيقتين";
+  return `${n} ${n <= 10 ? "دقائق" : "دقيقة"}`;
+}
+
+function adhanWatch(now) {
+  const e = nextAdhan(now);
+  if (!e) return;
+  const ms = e.at - now, at = e.at.getTime();
+  // Each fires once per adhan, in its own minute; a page opened later in that minute still gets it.
+  if (S.preAdhan === "on" && ms <= 300e3 && ms > 240e3 && preWarned !== at) {
+    preWarned = at;
+    heads(`${title(e)} بعد ${minutes(Math.ceil(ms / 6e4))}`, `الساعة ${fmt(e.at)}`, "adhan");
+  }
+  if (S.muezzin === "on" && ms <= 1800e3 && ms > 1740e3 && muezWarned !== at) {
+    muezWarned = at;
+    heads(`تذكير المؤذن: ${title(e)} بعد ${minutes(Math.ceil(ms / 6e4))}`, `الساعة ${fmt(e.at)}`, "muezzin");
+  }
+}
+
+// One heads-up: bell, a short buzz, the in-page notice, and a system notification.
+function heads(text, sub, tag) {
+  chime();
+  if (navigator.vibrate) navigator.vibrate([200, 120, 200]);
+  toast(text, sub);
+  notify(text, sub, tag);
+}
+
+let toastTimer = 0;
+function toast(text, sub) {
+  const el = $("toast");
+  $("toastT").textContent = text;
+  $("toastS").textContent = sub || "";
+  el.classList.remove("show");
+  void el.offsetWidth;   // restart the slide-in if one is already showing
+  el.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove("show"), 7000);
+}
+$("toast").addEventListener("click", () => { clearTimeout(toastTimer); $("toast").classList.remove("show"); });
+
+// ---- Before the iqama: a chime and notice at two minutes, a full-screen countdown in the last minute ----
+let warned = 0, dismissed = 0, iqDone = null;   // iqama times (ms) already handled
+
+function iqamaWatch(e, ms, now) {
+  const box = $("iqama");
+  // The iqama has just come: hold «حان وقت الإقامة» for a minute, or until tapped.
+  if (iqDone && now >= iqDone.at && now - iqDone.at < 60e3 && dismissed !== iqDone.at) {
+    box.hidden = false; box.classList.add("now");
+    setText("iqWhat", `حان وقت إقامة ${iqDone.name}`);
+    return;
+  }
+  if (e.kind !== "iqama") { box.hidden = true; return; }
+  const at = e.at.getTime();
+
+  if (S.warn === "on" && ms <= 120e3 && ms > 60e3 && warned !== at) {
+    warned = at;
+    heads(`إقامة ${e.p.name} بعد ${ms > 90e3 ? "دقيقتين" : "دقيقة"}`, `الساعة ${fmt(e.at)}`, "iqama");
+  }
+
+  if (ms <= 60e3 && ms > 0 && dismissed !== at) {
+    const sec = Math.ceil(ms / 1000);
+    box.hidden = false; box.classList.remove("now");
+    setText("iqWhat", `إقامة ${e.p.name}`);
+    if ($("iqSec").textContent !== String(sec)) {
+      $("iqSec").textContent = String(sec);
+      if (!calm.matches && $("iqSec").animate) $("iqSec").animate(
+        [{ transform: "scale(1.12)", opacity: .55 }, { transform: "none", opacity: 1 }],
+        { duration: 450, easing: "cubic-bezier(.16, 1, .3, 1)" });
+    }
+    $("iqArc").style.strokeDashoffset = String(60 - sec);
+    if (sec <= 1) iqDone = { at, name: e.p.name };
+    if (sec === 1 && S.warn === "on") setTimeout(chime, 900);
+  } else if (!(iqDone && iqDone.at === at)) {
+    box.hidden = true;
+  }
+}
+
+$("iqama").addEventListener("click", () => {
+  dismissed = iqDone && Date.now() - iqDone.at < 60e3 ? iqDone.at : (nextEvent(new Date()) || {}).at?.getTime();
+  $("iqama").hidden = true;
+});
+
+// A soft two-tone bell, made in the browser (no sound file). iPhone needs one tap first to allow sound.
+let actx = null;
+function unlockAudio() {
+  try {
+    actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+    if (actx.state === "suspended") actx.resume();
+  } catch (e) {}
+}
+addEventListener("pointerdown", unlockAudio, { passive: true });
+function chime() {
+  if (!actx) return;
+  const t0 = actx.currentTime;
+  for (const [f, d] of [[880, 0], [660, .45]]) {
+    const o = actx.createOscillator(), g = actx.createGain();
+    o.type = "sine"; o.frequency.value = f;
+    g.gain.setValueAtTime(0, t0 + d);
+    g.gain.linearRampToValueAtTime(.35, t0 + d + .02);
+    g.gain.exponentialRampToValueAtTime(.001, t0 + d + 1.2);
+    o.connect(g).connect(actx.destination);
+    o.start(t0 + d); o.stop(t0 + d + 1.3);
+  }
+}
+
+// System notification (iPhone: only once the site is on the home screen, iOS 16.4+).
+// When server push is on, the server sends the same notice, so the page does not send a second one.
+function notify(title, body, tag) {
+  if (window.AdhanPush && window.AdhanPush.active) return;
+  if (!("Notification" in window) || Notification.permission !== "granted") return;
+  const opts = { body, icon: "icon-180.png", badge: "icon-180.png", tag: tag || "iqama", lang: "ar", dir: "rtl" };
+  if (navigator.serviceWorker && navigator.serviceWorker.controller) {
+    navigator.serviceWorker.ready.then(r => r.showNotification(title, opts)).catch(() => {});
+  } else {
+    try { new Notification(title, opts); } catch (e) {}
+  }
+}
+
+// ---- Notifications: server push (push.js, loaded deferred as window.AdhanPush) when present, else the page's own ----
+const ios = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+const standalone = navigator.standalone || matchMedia("(display-mode: standalone)").matches;
+
+function pushPayload() {
+  const p = place();
+  return { lat: p.lat, lng: p.lng, tz: zone(), method: S.method, iqama: S.iqama, preAdhan: S.preAdhan, muezzin: S.muezzin, warn: S.warn };
+}
+
+// "unsupported" | "needs-install" | "default" | "denied" | "on"
+function pushStatus() {
+  if (window.AdhanPush) {
+    try { return Promise.resolve(window.AdhanPush.status()).catch(() => "unsupported"); } catch (e) { return Promise.resolve("unsupported"); }
+  }
+  if (!("Notification" in window)) return Promise.resolve(ios && !standalone ? "needs-install" : "unsupported");
+  const p = Notification.permission;
+  return Promise.resolve(p === "granted" ? "on" : p);
+}
+
+// Ask for notifications: through server push when it is there, else the browser's own permission.
+function askNotify() {
+  unlockAudio();
+  try {
+    if (window.AdhanPush) return Promise.resolve(window.AdhanPush.enable(pushPayload())).catch(() => {});
+    if ("Notification" in window) return Promise.resolve(Notification.requestPermission()).catch(() => {});
+  } catch (e) {}
+  return Promise.resolve();
+}
+
+const NOTIFY_TEXT = {
+  "needs-install": "في الآيفون الإشعارات تشتغل بعد إضافة الموقع للشاشة الرئيسية: اضغط زر المشاركة في Safari، ثم «إضافة إلى الشاشة الرئيسية»، وافتحه من أيقونته وفعّل الإشعارات من هنا. الصوت والتنبيه داخل الصفحة شغّالين.",
+  unsupported: "هذا المتصفح ما يدعم الإشعارات. الصوت والتنبيه داخل الصفحة شغّالين والصفحة مفتوحة، وقبل الإقامة بدقيقة عداد بكامل الشاشة.",
+  default: "صوت تنبيه وإشعار للتنبيهات الشغّالة، وقبل الإقامة بدقيقة عداد بكامل الشاشة.",
+  denied: "الإشعارات مقفلة من إعدادات الجوال. الصوت والتنبيه داخل الصفحة شغّالين.",
+  on: "الإشعارات شغّالة للتنبيهات اللي فوق، وقبل الإقامة بدقيقة عداد بكامل الشاشة.",
+};
+
+function notifyUI() {
+  return pushStatus().then(st => {
+    if (!NOTIFY_TEXT[st]) st = "unsupported";
+    $("notifyRow").hidden = st !== "default";
+    $("notifyMsg").textContent = NOTIFY_TEXT[st];
+    return st;
+  });
+}
+$("notifyBtn").addEventListener("click", () => { askNotify().finally(notifyUI); });
+
+// Keep the server's copy of the settings current; push.js decides whether it has anything to update.
+function pushSync() {
+  if (!window.AdhanPush) return;
+  try { Promise.resolve(window.AdhanPush.sync(pushPayload())).catch(() => {}); } catch (e) {}
+}
+
+// Tick right on each second so the countdown never stutters; nothing runs while the page is hidden.
+let timer = 0;
+function loop() {
+  clearTimeout(timer);
+  if (document.hidden) return;
+  tick();
+  timer = setTimeout(loop, 1000 - (Date.now() % 1000) + 5);
+}
+
+// ---- Radio ----
+const audio = $("audio");
+const ICON_PLAY = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.5-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5z"/></svg>';
+const ICON_STOP = '<svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>';
+const RADIO_TEXT = {
+  idle: "بث مباشر من إذاعة القرآن الكريم",
+  loading: "يتصل بالبث المباشر…",
+  playing: "تسمع البث المباشر · اضغط للإيقاف",
+  error: "ما اشتغلت، تأكد من النت وجرّب مرة ثانية",
+};
+let radioOn = false;
+
+function radioUI(state) {
+  $("radio").classList.toggle("on", state === "playing");
+  $("radio").setAttribute("aria-pressed", String(radioOn));
+  const icon = radioOn ? ICON_STOP : ICON_PLAY;
+  if ($("radioIcon").innerHTML !== icon) { $("radioIcon").innerHTML = icon; soft($("radioIcon").firstChild); }
+  $("radioState").textContent = RADIO_TEXT[state];
+}
+
+// Fast start: the live node is looked up ahead of time (functions/radio.js) and its connection opened early,
+// so a tap goes straight to the audio. Without the lookup (e.g. a plain local server) the public link is used.
+let node = null, nodeAt = 0;
+const NODE_FRESH = 90e3;   // node links stay valid for minutes; refresh well before
+async function resolveNode() {
+  if (document.hidden || (node && Date.now() - nodeAt < 60e3)) return;
+  try {
+    const r = await fetch("radio", { cache: "no-store" });
+    const j = r.ok && await r.json();
+    if (j && j.url) { node = j.url; nodeAt = Date.now(); warm(new URL(node).origin); }
+  } catch (e) {}
+}
+const warmed = new Set();
+function warm(origin) {
+  if (warmed.has(origin)) return;
+  warmed.add(origin);
+  const l = document.createElement("link");
+  l.rel = "preconnect"; l.href = origin;
+  document.head.appendChild(l);
+}
+resolveNode();
+setInterval(resolveNode, 60e3);
+document.addEventListener("visibilitychange", resolveNode);
+$("radio").addEventListener("pointerdown", resolveNode, { passive: true });
+
+function radioStart() {
+  radioOn = true;
+  radioUI("loading");
+  const fresh = node && Date.now() - nodeAt < NODE_FRESH;
+  audio.src = fresh ? node : RADIO_URL + "?t=" + Date.now();   // always join live, never an old buffer
+  if (fresh) { node = null; resolveNode(); }                  // use each node link once; fetch the next now
+  // A failure counts only if this source is still the one playing (the fallback below may have replaced it).
+  const src = audio.src;
+  audio.play().catch(() => { if (radioOn && audio.src === src) { radioOn = false; radioUI("error"); } });
+}
+
+function radioStop() {
+  radioOn = false;
+  audio.pause();
+  audio.removeAttribute("src");
+  audio.load();
+  radioUI("idle");
+}
+$("radio").addEventListener("click", () => radioOn ? radioStop() : radioStart());
+audio.addEventListener("playing", () => radioOn && radioUI("playing"));
+audio.addEventListener("waiting", () => radioOn && radioUI("loading"));
+// A node link failed (expired or refused): fall back to the public link once; if that fails too, say so.
+audio.addEventListener("error", () => {
+  if (!radioOn || !audio.getAttribute("src")) return;
+  if (!audio.src.startsWith(RADIO_URL)) {
+    audio.src = RADIO_URL + "?t=" + Date.now();
+    const src = audio.src;
+    audio.play().catch(() => { if (radioOn && audio.src === src) { radioOn = false; radioUI("error"); } });
+  } else {
+    radioOn = false; radioUI("error");
+  }
+});
+if ("mediaSession" in navigator) {
+  navigator.mediaSession.metadata = new MediaMetadata({ title: "إذاعة القرآن الكريم", artist: "بث مباشر" });
+  navigator.mediaSession.setActionHandler("play", radioStart);
+  navigator.mediaSession.setActionHandler("pause", radioStop);
+  navigator.mediaSession.setActionHandler("stop", radioStop);
+}
+radioUI("idle");
+
+// ---- Settings sheet ----
+function applyTheme() {
+  if (S.theme === "auto") document.documentElement.removeAttribute("data-theme");
+  else document.documentElement.setAttribute("data-theme", S.theme);
+}
+
+const SEGS = [["clockSeg", "clock"], ["sunSeg", "sunrise"], ["preSeg", "preAdhan"], ["muezSeg", "muezzin"], ["warnSeg", "warn"], ["themeSeg", "theme"]];
+
+function buildSettings() {
+  notifyUI();
+  $("citySel").innerHTML = CITIES.map((c, i) => `<option value="${i}">${c[0]}</option>`).join("") +
+    (S.lat != null ? `<option value="-1">موقعي</option>` : "");
+  $("citySel").value = String(S.city);
+
+  $("method").innerHTML = METHODS.map(([k, n]) => `<option value="${k}">${n}</option>`).join("");
+  $("method").value = S.method;
+
+  $("iqamaFields").innerHTML = PRAYERS.filter(p => !p.sun).map(p => `
+    <div class="field">
+      <label>${p.name}</label>
+      <div class="step">
+        <button type="button" data-k="${p.key}" data-d="-1" aria-label="أقل">−</button>
+        <output id="iq-${p.key}">${S.iqama[p.key]} د</output>
+        <button type="button" data-k="${p.key}" data-d="1" aria-label="أكثر">+</button>
+      </div>
+    </div>`).join("");
+
+  for (const [id, prop] of SEGS) {
+    $(id).querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.v === S[prop])));
+  }
+}
+
+function changed() { save(); applyTheme(); dayCache.clear(); fmtCache.clear(); renderedFor = ""; tick(); pushSync(); }
+
+$("openSettings").addEventListener("click", () => { buildSettings(); $("settings").showModal(); });
+function closeSheet() {
+  const d = $("settings");
+  if (!d.open || d.classList.contains("closing")) return;
+  if (calm.matches) { d.close(); return; }
+  d.classList.add("closing");
+  d.addEventListener("animationend", () => { d.classList.remove("closing"); d.close(); }, { once: true });
+}
+$("settings").addEventListener("click", e => { if (e.target === $("settings")) closeSheet(); });
+$("settings").addEventListener("cancel", e => { e.preventDefault(); closeSheet(); });
+$("sheetDone").addEventListener("click", closeSheet);
+
+$("citySel").addEventListener("change", e => { S.city = +e.target.value; changed(); });
+$("method").addEventListener("change", e => { S.method = e.target.value; changed(); });
+
+$("iqamaFields").addEventListener("click", e => {
+  const b = e.target.closest("button[data-k]");
+  if (!b) return;
+  const k = b.dataset.k;
+  S.iqama[k] = Math.max(0, Math.min(60, S.iqama[k] + +b.dataset.d));
+  $("iq-" + k).textContent = `${S.iqama[k]} د`;
+  changed();
+});
+
+for (const [id, prop] of SEGS) {
+  $(id).addEventListener("click", e => {
+    const b = e.target.closest("button[data-v]");
+    if (!b) return;
+    S[prop] = b.dataset.v;
+    $(id).querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", String(x === b)));
+    changed();
+  });
+}
+
+$("locate").addEventListener("click", () => {
+  const msg = $("locateMsg");
+  if (!navigator.geolocation) { msg.textContent = "الجهاز ما يدعم تحديد الموقع."; return; }
+  msg.textContent = "جاري تحديد الموقع…";
+  navigator.geolocation.getCurrentPosition(pos => {
+    S.lat = +pos.coords.latitude.toFixed(4);
+    S.lng = +pos.coords.longitude.toFixed(4);
+    S.city = -1;
+    msg.textContent = "تم، الأوقات الآن على موقعك.";
+    buildSettings();
+    changed();
+  }, () => { msg.textContent = "ما قدرنا نحدد الموقع، اختر المدينة من القائمة."; }, { timeout: 15000 });
+});
+
+$("reset").addEventListener("click", () => { S = JSON.parse(JSON.stringify(DEFAULTS)); buildSettings(); changed(); });
+
+// ---- Start ----
+applyTheme();
+loop();
+document.addEventListener("visibilitychange", loop);
+addEventListener("pageshow", loop);
+if ("serviceWorker" in navigator && isSecureContext) {
+  // A new version took over: reload once so the screen shows it, not the old copy.
+  const hadOld = !!navigator.serviceWorker.controller;
+  navigator.serviceWorker.addEventListener("controllerchange", () => { if (hadOld) location.reload(); });
+  navigator.serviceWorker.register("sw.js", { updateViaCache: "none" }).catch(() => {});
+}
+
+// First visit: a centred welcome that explains the app, how to install it on iPhone, and asks for notifications.
+// Shown once per place it runs (Safari and the home-screen app keep separate storage, so the app greets once too).
+(() => {
+  const d = $("welcome");
+  let seen = false;
+  try { seen = localStorage.getItem("adhan-web-welcome") === "1"; } catch (e) {}
+  if (seen) return;
+
+  function done() {
+    try { localStorage.setItem("adhan-web-welcome", "1"); } catch (e) {}
+    unlockAudio();   // this tap also allows the iqama chime to sound later
+    if (calm.matches) { d.close(); return; }
+    d.classList.add("closing");
+    d.addEventListener("animationend", () => { d.classList.remove("closing"); d.close(); }, { once: true });
+  }
+  $("wStart").addEventListener("click", done);
+  $("wLater").addEventListener("click", done);
+  $("wAllow").addEventListener("click", () => { askNotify().finally(done); });
+  d.addEventListener("cancel", e => { e.preventDefault(); done(); });
+  // Let the page settle in first; by then push.js (deferred) has loaded and can say what it supports.
+  setTimeout(() => pushStatus().then(st => {
+    const canAsk = st === "default";
+    $("wInstall").hidden = !(ios && !standalone);
+    $("wNotify").hidden = !canAsk;
+    $("wAllow").hidden = !canAsk;
+    $("wLater").hidden = !canAsk;
+    $("wStart").hidden = canAsk;
+    d.showModal();
+  }), 450);
+})();
+</script>
+</body>
+</html>

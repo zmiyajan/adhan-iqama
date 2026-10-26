@@ -1,0 +1,9 @@
+{
+  "name": "adhan-push",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test test/*.test.js",
+    "dev": "npx -y wrangler@4 dev --test-scheduled --port 8792 --persist-to ../.wrangler/state"
+  }
+}

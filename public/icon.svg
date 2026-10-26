@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <!-- The user's logo, traced from their design: a gold ogee dome with a crescent finial and a minaret beside it. -->
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="512" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#171615"/>
+      <stop offset="1" stop-color="#0b0b0b"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="236" cy="300" r="210" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#5a3c14" stop-opacity=".45"/>
+      <stop offset="1" stop-color="#0b0b0b" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="dome" x1="90" y1="220" x2="340" y2="470" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#f9e2a8"/>
+      <stop offset=".5" stop-color="#e8bb6a"/>
+      <stop offset="1" stop-color="#b07a36"/>
+    </linearGradient>
+    <linearGradient id="minaret" x1="330" y1="100" x2="400" y2="460" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#fbe3ad"/>
+      <stop offset=".5" stop-color="#e0ac5e"/>
+      <stop offset="1" stop-color="#7a5020"/>
+    </linearGradient>
+    <mask id="crescent">
+      <rect width="512" height="512" fill="#000"/>
+      <circle cx="213" cy="228" r="37" fill="#fff"/>
+      <circle cx="236" cy="213" r="31" fill="#000"/>
+    </mask>
+  </defs>
+  <rect width="512" height="512" fill="url(#bg)"/>
+  <rect width="512" height="512" fill="url(#glow)"/>
+
+  <!-- minaret: onion cap on a slightly wider shaft, pointed window -->
+  <path d="M329 191 C322 176 326 160 340 147 C351 137 357 120 360 103 C363 120 369 137 380 147 C394 160 398 176 391 191 Z" fill="url(#minaret)"/>
+  <rect x="322" y="190" width="75" height="267" fill="url(#minaret)"/>
+  <path d="M343 270 V222 Q343 210 359.5 202 Q376 210 376 222 V270 Z" fill="#0d0c0b"/>
+
+  <!-- dome: a wide ogee arch; its right leg runs over the minaret's left edge -->
+  <path d="M84.5 457 V408 C84.5 372 118 352 158 336 C186 325 205 320 213 302 C221 320 240 325 268 336 C308 352 338 372 338 408 V457"
+        fill="none" stroke="url(#dome)" stroke-width="29" stroke-linejoin="miter" stroke-miterlimit="6"/>
+
+  <!-- finial and crescent -->
+  <rect x="210.5" y="262" width="5" height="34" fill="url(#dome)"/>
+  <rect width="512" height="512" fill="url(#dome)" mask="url(#crescent)"/>
+</svg>
